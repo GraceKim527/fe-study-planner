@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI 작업 환경 (공개 제외)
+CLAUDE.md
+AGENTS.md
+.claude/
+
+# docs는 작업 중 자유롭게 사용. 제출 전 본인 검토 후 선별 추가
+docs/
