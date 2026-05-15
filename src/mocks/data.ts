@@ -1,12 +1,21 @@
 import type { Course, StudyBlock } from "@/types";
 
 export const courses: Course[] = [
-  { id: "c-react",    title: "React 심화",      color: "#22C55E" },
-  { id: "c-ts",       title: "TypeScript 실전", color: "#3B82F6" },
-  { id: "c-next",     title: "Next.js 16",      color: "#A855F7" },
-  { id: "c-css",      title: "CSS 설계",        color: "#F59E0B" },
-  { id: "c-test",     title: "테스트 코드",     color: "#14B8A6" },
-  { id: "c-algo",     title: "알고리즘",        color: "#EC4899" },
+  { id: "c-react",    title: "React 심화",         color: "#22C55E" },
+  { id: "c-ts",       title: "TypeScript 실전",    color: "#3B82F6" },
+  { id: "c-next",     title: "Next.js 16",         color: "#A855F7" },
+  { id: "c-css",      title: "CSS 설계",           color: "#F59E0B" },
+  { id: "c-test",     title: "테스트 코드 작성법", color: "#14B8A6" },
+  { id: "c-algo",     title: "알고리즘 기초",      color: "#EC4899" },
+  { id: "c-ds",       title: "자료구조",           color: "#EF4444" },
+  { id: "c-network",  title: "네트워크 입문",      color: "#0EA5E9" },
+  { id: "c-os",       title: "운영체제",           color: "#8B5CF6" },
+  { id: "c-db",       title: "데이터베이스 기초",  color: "#10B981" },
+  { id: "c-system",   title: "시스템 디자인",      color: "#F97316" },
+  { id: "c-design",   title: "디자인 시스템",      color: "#06B6D4" },
+  { id: "c-perf",     title: "프론트엔드 성능",    color: "#84CC16" },
+  { id: "c-a11y",     title: "웹 접근성",          color: "#D946EF" },
+  { id: "c-git",      title: "Git 활용",           color: "#6366F1" },
 ];
 
 // 이번 주 샘플 블록 (weekStart는 핸들러에서 동적으로 매칭).
