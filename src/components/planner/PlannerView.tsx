@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { DayOfWeek, EditableStudyBlock, StudyBlock, TimeString } from "@/types";
 import { WeekGrid } from "./WeekGrid";
 import { WeekGridSkeleton } from "./WeekGridSkeleton";
+import { WeeklySummary } from "./WeeklySummary";
 import { BlockEditor, type BlockDraft } from "./BlockEditor";
 import { PlannerError } from "./PlannerError";
 import { useCourses } from "@/hooks/useCourses";
@@ -74,6 +75,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
 
   return (
     <>
+      <WeeklySummary blocks={blocks} courses={courses.data.courses} />
       <WeekGrid
         blocks={blocks}
         courses={courses.data.courses}

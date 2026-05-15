@@ -1,0 +1,205 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── 카드 공통 ── */
+.chartCard,
+.emptyCard {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+/* ── 총합 카드 (옅은 primary 배경 + 라벨 위 / 숫자 + 메타 옆) ── */
+.totalCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-lg);
+}
+
+.totalLabel {
+  font-size: var(--text-sm);
+  color: var(--color-primary-700);
+  font-weight: var(--font-weight-medium);
+}
+
+.totalBody {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.totalValue {
+  font-size: 32px;
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-700);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.totalMeta {
+  font-size: var(--text-sm);
+  color: var(--color-primary-700);
+  opacity: 0.75;
+}
+
+/* ── 빈 상태 ── */
+.emptyCard {
+  text-align: center;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-3) 0;
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
+}
+
+/* ── 차트 카드 2개 ── */
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.chartCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.chartTitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+/* ── 강의별 (가로 막대) ── */
+.courseList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.courseRow {
+  display: grid;
+  grid-template-columns: minmax(80px, 140px) 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.courseTitle {
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barTrack {
+  position: relative;
+  height: 10px;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-base);
+}
+
+.courseValue {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.coursePct {
+  color: var(--color-text-subtle);
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── 요일별 (세로 막대) ── */
+.dayChart {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.dayItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.dayBarTrack {
+  width: 100%;
+  max-width: 32px;
+  height: 80px;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.dayBarFill {
+  width: 100%;
+  background: var(--color-primary-500);
+  border-radius: var(--radius-sm);
+  transition: height var(--transition-base);
+}
+
+.dayLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.dayValue {
+  font-size: 10px;
+  color: var(--color-text-subtle);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── 모바일: 세로 stack ── */
+@media (max-width: 768px) {
+  .charts {
+    grid-template-columns: 1fr;
+  }
+
+  .courseRow {
+    grid-template-columns: minmax(80px, 120px) 1fr auto;
+  }
+
+  /* 모바일에선 % 숨김 (공간 절약) — 막대로 비율 전달 */
+  .coursePct {
+    display: none;
+  }
+}
