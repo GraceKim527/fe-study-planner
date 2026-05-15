@@ -5,11 +5,11 @@ import type { DayOfWeek, EditableStudyBlock, StudyBlock, TimeString } from "@/ty
 import { WeekGrid } from "./WeekGrid";
 import { WeekGridSkeleton } from "./WeekGridSkeleton";
 import { BlockEditor, type BlockDraft } from "./BlockEditor";
+import { PlannerError } from "./PlannerError";
 import { useCourses } from "@/hooks/useCourses";
 import { usePlanner } from "@/hooks/usePlanner";
 import { usePlannerStore } from "@/stores/plannerStore";
 import { minutesToTime, timeToMinutes } from "@/lib/time";
-import styles from "@/app/page.module.css";
 
 type CreatePreset = { dayOfWeek: DayOfWeek; startTime: TimeString; endTime: TimeString };
 
@@ -46,8 +46,15 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
     return <WeekGridSkeleton />;
   }
   if (courses.isError || planner.isError) {
-    const msg = courses.error?.message ?? planner.error?.message ?? "데이터를 불러오지 못했습니다.";
-    return <div className={`${styles.status} ${styles.error}`}>{msg}</div>;
+    return (
+      <PlannerError
+        message={courses.error?.message ?? planner.error?.message}
+        onRetry={() => {
+          if (courses.isError) courses.refetch();
+          if (planner.isError) planner.refetch();
+        }}
+      />
+    );
   }
 
   function handleSubmit(draft: BlockDraft) {
