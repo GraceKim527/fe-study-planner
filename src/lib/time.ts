@@ -62,6 +62,16 @@ export function formatTimeRange(start: TimeString, end: TimeString): string {
   return `${start} - ${end}`;
 }
 
+// "5월 11일(월) – 5월 17일(일)" 형태. 헤더용.
+const WEEK_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
+export function formatWeekRange(weekStart: Date): string {
+  const end = new Date(weekStart);
+  end.setDate(end.getDate() + 6);
+  const fmt = (d: Date) =>
+    `${d.getMonth() + 1}월 ${d.getDate()}일(${WEEK_LABELS[toDayOfWeek(d)]})`;
+  return `${fmt(weekStart)} – ${fmt(end)}`;
+}
+
 export function formatDuration(minutes: number): string {
   if (!Number.isFinite(minutes) || minutes <= 0) return "0분";
   const h = Math.floor(minutes / MINUTES_PER_HOUR);

@@ -8,6 +8,7 @@ import {
   formatDateKey,
   formatTimeRange,
   formatDuration,
+  formatWeekRange,
 } from "./time";
 
 describe("timeToMinutes", () => {
@@ -133,5 +134,17 @@ describe("formatDuration", () => {
 
   it("시간+분", () => {
     expect(formatDuration(90)).toBe("1시간 30분");
+  });
+});
+
+describe("formatWeekRange", () => {
+  it("월요일부터 일요일까지 6일 차이로 포맷한다", () => {
+    const monday = new Date(2026, 4, 11);
+    expect(formatWeekRange(monday)).toBe("5월 11일(월) – 5월 17일(일)");
+  });
+
+  it("월말을 넘어가는 주도 정상 처리한다", () => {
+    const monday = new Date(2026, 4, 25);
+    expect(formatWeekRange(monday)).toBe("5월 25일(월) – 5월 31일(일)");
   });
 });

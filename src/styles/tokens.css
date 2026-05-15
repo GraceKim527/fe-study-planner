@@ -91,6 +91,11 @@
   --grid-time-col-width: 60px;
   --grid-slot-height:    40px;
   --grid-day-count:      7;
+  --grid-day-min-width:  120px;
+  --grid-min-width:      720px;
+
+  /* Layout */
+  --page-max-width: 1200px;
 
   /* Z-index */
   --z-base:    0;
