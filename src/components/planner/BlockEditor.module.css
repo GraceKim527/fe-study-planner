@@ -35,14 +35,72 @@
   box-shadow: 0 0 0 2px var(--color-primary-100);
 }
 
+/* native 화살표를 끄고 자체 SVG로 그린다. 텍스트와 화살표 사이 여유를 padding-right로 확보. */
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  padding-right: var(--space-8);
+}
+
 .field textarea {
-  resize: vertical;
+  resize: none;
   min-height: 64px;
   font-family: var(--font-sans);
 }
 
+.timeInput {
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition-fast);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeInput:focus-visible {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 2px var(--color-primary-100);
+}
+
+.memoLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.memoCount {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
 .field [aria-invalid="true"] {
   border-color: var(--color-conflict);
+}
+
+.required {
+  color: var(--color-conflict);
+  margin-left: 2px;
+}
+
+/* 시각적으로는 숨기되 스크린 리더는 읽도록. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .row {

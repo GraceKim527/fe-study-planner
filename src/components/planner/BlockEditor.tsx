@@ -2,8 +2,9 @@
 
 import { useId, useMemo, useRef, useState } from "react";
 import type { Course, DayOfWeek, EditableStudyBlock, TimeString } from "@/types";
-import { generateTimeSlots, timeToMinutes } from "@/lib/time";
+import { timeToMinutes } from "@/lib/time";
 import { Modal } from "@/components/ui/Modal";
+import { Combobox } from "@/components/ui/Combobox";
 import styles from "./BlockEditor.module.css";
 
 export interface BlockDraft {
@@ -12,6 +13,15 @@ export interface BlockDraft {
   startTime: TimeString;
   endTime: TimeString;
   memo?: string;
+}
+
+// 폼 입력 중 상태. create 모드는 미선택을 표현해야 해서 옵셔널.
+interface FormState {
+  courseId: string;
+  dayOfWeek: DayOfWeek | null;
+  startTime: TimeString;
+  endTime: TimeString;
+  memo: string;
 }
 
 interface Props {
@@ -23,7 +33,7 @@ interface Props {
   onSubmit(draft: BlockDraft): void;
   onDelete?(): void;
   onClose(): void;
-  // 그리드의 시간 범위와 동일하게 유지.
+  // 그리드 범위와 동기화. 명세 기본값 08:00~20:00.
   startHour?: number;
   endHour?: number;
 }
@@ -38,7 +48,7 @@ const DAY_OPTIONS: Array<{ value: DayOfWeek; label: string }> = [
   { value: 6, label: "일" },
 ];
 
-const SLOT_MINUTES = 30;
+const MEMO_MAX = 200;
 
 export function BlockEditor({
   open,
@@ -49,28 +59,23 @@ export function BlockEditor({
   onDelete,
   onClose,
   startHour = 8,
-  endHour = 22,
+  endHour = 20,
 }: Props) {
-  const slots = useMemo(
-    () => generateTimeSlots(startHour, endHour, SLOT_MINUTES),
-    [startHour, endHour],
-  );
-
-  const defaults = useMemo<BlockDraft>(() => {
-    return {
-      courseId: initial?.courseId ?? courses[0]?.id ?? "",
-      dayOfWeek: initial?.dayOfWeek ?? 0,
-      startTime: initial?.startTime ?? slots[0] ?? "09:00",
-      endTime: initial?.endTime ?? slots[2] ?? "10:00",
-      memo: initial?.memo ?? "",
-    };
-  }, [initial, courses, slots]);
+  const minTime = `${String(startHour).padStart(2, "0")}:00`;
+  const maxTime = `${String(endHour).padStart(2, "0")}:00`;
+  const defaults = useMemo<FormState>(() => ({
+    courseId: initial?.courseId ?? "",
+    dayOfWeek: initial?.dayOfWeek ?? null,
+    startTime: initial?.startTime ?? "",
+    endTime: initial?.endTime ?? "",
+    memo: initial?.memo ?? "",
+  }), [initial]);
 
   // 폼 상태는 한 번만 초기화. 다시 열거나 다른 블록을 편집하려면 부모가 key를 갈아끼워 리마운트해야 한다.
-  const [draft, setDraft] = useState<BlockDraft>(defaults);
+  const [form, setForm] = useState<FormState>(defaults);
   const [submitted, setSubmitted] = useState(false);
 
-  const errors = validate(draft);
+  const errors = validateForm(form, { startHour, endHour });
   const hasError = Object.keys(errors).length > 0;
 
   const courseId = useId();
@@ -78,24 +83,35 @@ export function BlockEditor({
   const startId = useId();
   const endId = useId();
   const memoId = useId();
-  const startErrId = useId();
-  const endErrId = useId();
+  const memoCountId = useId();
+  const timeErrId = useId();
   const courseErrId = useId();
+  const dayErrId = useId();
 
-  const startTimeRef = useRef<HTMLSelectElement>(null);
+  const startTimeRef = useRef<HTMLInputElement>(null);
+  const dayRef = useRef<HTMLSelectElement>(null);
+  const courseInputRef = useRef<HTMLInputElement | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
     if (hasError) {
-      // 첫 에러 필드로 포커스. 시간 에러가 가장 흔하므로 시간부터.
-      if (errors.endTime || errors.startTime) startTimeRef.current?.focus();
+      // 위에서부터 첫 에러 필드로 포커스.
+      if (errors.courseId) courseInputRef.current?.focus();
+      else if (errors.dayOfWeek) dayRef.current?.focus();
+      else if (errors.startTime || errors.endTime) startTimeRef.current?.focus();
       return;
     }
-    onSubmit({ ...draft, memo: draft.memo?.trim() || undefined });
+    onSubmit({
+      courseId: form.courseId,
+      dayOfWeek: form.dayOfWeek as DayOfWeek,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      memo: form.memo.trim() || undefined,
+    });
   }
 
-  function showError(field: keyof BlockDraft) {
+  function showError<K extends keyof typeof errors>(field: K) {
     return submitted && errors[field];
   }
 
@@ -107,83 +123,116 @@ export function BlockEditor({
     >
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <div className={styles.field}>
-          <label htmlFor={courseId}>강의</label>
-          <select
+          <label htmlFor={courseId}>
+            강의<RequiredMark />
+          </label>
+          <Combobox
             id={courseId}
-            value={draft.courseId}
-            onChange={(e) => setDraft({ ...draft, courseId: e.target.value })}
-            aria-invalid={showError("courseId") ? true : undefined}
-            aria-describedby={showError("courseId") ? courseErrId : undefined}
-          >
-            {courses.length === 0 && <option value="">강의 없음</option>}
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.title}</option>
-            ))}
-          </select>
+            value={form.courseId}
+            options={courses.map((c) => ({ value: c.id, label: c.title }))}
+            onChange={(v) => setForm({ ...form, courseId: v })}
+            placeholder="강의를 검색하거나 선택하세요"
+            required
+            ariaInvalid={showError("courseId") ? true : undefined}
+            ariaDescribedBy={showError("courseId") ? courseErrId : undefined}
+            inputRef={courseInputRef}
+          />
           {showError("courseId") && (
             <p id={courseErrId} className={styles.error}>{errors.courseId}</p>
           )}
         </div>
 
         <div className={styles.field}>
-          <label htmlFor={dayId}>요일</label>
+          <label htmlFor={dayId}>
+            요일<RequiredMark />
+          </label>
           <select
             id={dayId}
-            value={draft.dayOfWeek}
-            onChange={(e) => setDraft({ ...draft, dayOfWeek: Number(e.target.value) as DayOfWeek })}
+            ref={dayRef}
+            className={styles.select}
+            required
+            value={form.dayOfWeek ?? ""}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                dayOfWeek: e.target.value === "" ? null : (Number(e.target.value) as DayOfWeek),
+              })
+            }
+            aria-invalid={showError("dayOfWeek") ? true : undefined}
+            aria-describedby={showError("dayOfWeek") ? dayErrId : undefined}
           >
+            <option value="" disabled>
+              요일을 선택하세요
+            </option>
             {DAY_OPTIONS.map((d) => (
               <option key={d.value} value={d.value}>{d.label}</option>
             ))}
           </select>
+          {showError("dayOfWeek") && (
+            <p id={dayErrId} className={styles.error}>{errors.dayOfWeek}</p>
+          )}
         </div>
 
         <div className={styles.row}>
           <div className={styles.field}>
-            <label htmlFor={startId}>시작</label>
-            <select
+            <label htmlFor={startId}>
+              시작<RequiredMark />
+            </label>
+            <input
               id={startId}
               ref={startTimeRef}
-              value={draft.startTime}
-              onChange={(e) => setDraft({ ...draft, startTime: e.target.value })}
+              type="time"
+              step={1800}
+              min={minTime}
+              max={maxTime}
+              required
+              value={form.startTime}
+              onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               aria-invalid={showError("startTime") || showError("endTime") ? true : undefined}
-              aria-describedby={showError("startTime") || showError("endTime") ? startErrId : undefined}
-            >
-              {slots.slice(0, -1).map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              aria-describedby={showError("startTime") || showError("endTime") ? timeErrId : undefined}
+              className={styles.timeInput}
+            />
           </div>
           <div className={styles.field}>
-            <label htmlFor={endId}>종료</label>
-            <select
+            <label htmlFor={endId}>
+              종료<RequiredMark />
+            </label>
+            <input
               id={endId}
-              value={draft.endTime}
-              onChange={(e) => setDraft({ ...draft, endTime: e.target.value })}
+              type="time"
+              step={1800}
+              min={minTime}
+              max={maxTime}
+              required
+              value={form.endTime}
+              onChange={(e) => setForm({ ...form, endTime: e.target.value })}
               aria-invalid={showError("endTime") ? true : undefined}
-              aria-describedby={showError("endTime") ? endErrId : undefined}
-            >
-              {slots.slice(1).map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              aria-describedby={showError("endTime") ? timeErrId : undefined}
+              className={styles.timeInput}
+            />
           </div>
         </div>
         {(showError("startTime") || showError("endTime")) && (
-          <p id={startErrId} className={styles.error}>
+          <p id={timeErrId} className={styles.error}>
             {errors.endTime ?? errors.startTime}
           </p>
         )}
 
         <div className={styles.field}>
-          <label htmlFor={memoId}>메모 (선택)</label>
+          <div className={styles.memoLabelRow}>
+            <label htmlFor={memoId}>메모 (선택)</label>
+            <span id={memoCountId} className={styles.memoCount} aria-live="polite">
+              {form.memo.length} / {MEMO_MAX}
+            </span>
+          </div>
           <textarea
             id={memoId}
-            value={draft.memo ?? ""}
-            onChange={(e) => setDraft({ ...draft, memo: e.target.value })}
+            value={form.memo}
+            onChange={(e) => setForm({ ...form, memo: e.target.value })}
             rows={3}
-            maxLength={200}
-            placeholder="간단한 메모"
+            maxLength={MEMO_MAX}
+            placeholder={`최대 ${MEMO_MAX}자까지 입력 가능합니다`}
+            aria-describedby={memoCountId}
           />
         </div>
 
@@ -210,16 +259,54 @@ export function BlockEditor({
   );
 }
 
+// 시각용 *, 스크린 리더는 "필수"로 읽도록 분리.
+function RequiredMark() {
+  return (
+    <>
+      <span aria-hidden="true" className={styles.required}>*</span>
+      <span className={styles.srOnly}> 필수</span>
+    </>
+  );
+}
+
 // 모달 안에서는 폼 자체 유효성만 본다. 충돌 검사는 저장 단계에서.
-export function validate(draft: BlockDraft): Partial<Record<keyof BlockDraft, string>> {
-  const errors: Partial<Record<keyof BlockDraft, string>> = {};
-  if (!draft.courseId) errors.courseId = "강의를 선택해주세요.";
-  const start = timeToMinutes(draft.startTime);
-  const end = timeToMinutes(draft.endTime);
-  if (Number.isNaN(start)) errors.startTime = "시작 시간을 선택해주세요.";
-  if (Number.isNaN(end)) errors.endTime = "종료 시간을 선택해주세요.";
-  if (!Number.isNaN(start) && !Number.isNaN(end) && end <= start) {
-    errors.endTime = "종료 시간은 시작 시간보다 늦어야 합니다.";
+function validateForm(form: FormState, range: { startHour: number; endHour: number } = { startHour: 8, endHour: 20 }) {
+  const errors: Partial<Record<keyof FormState, string>> = {};
+  if (!form.courseId) errors.courseId = "강의를 선택해주세요.";
+  if (form.dayOfWeek === null) errors.dayOfWeek = "요일을 선택해주세요.";
+  if (!form.startTime) errors.startTime = "시작 시간을 입력해주세요.";
+  if (!form.endTime) errors.endTime = "종료 시간을 입력해주세요.";
+  if (form.startTime && form.endTime) {
+    const start = timeToMinutes(form.startTime);
+    const end = timeToMinutes(form.endTime);
+    const min = range.startHour * 60;
+    const max = range.endHour * 60;
+    if (Number.isNaN(start)) errors.startTime = "시작 시간 형식이 올바르지 않습니다.";
+    if (Number.isNaN(end)) errors.endTime = "종료 시간 형식이 올바르지 않습니다.";
+    if (!Number.isNaN(start) && (start < min || start >= max)) {
+      errors.startTime = `시작은 ${pad(range.startHour)}:00~${pad(range.endHour)}:00 사이여야 합니다.`;
+    }
+    if (!Number.isNaN(end) && (end <= min || end > max)) {
+      errors.endTime = `종료는 ${pad(range.startHour)}:00~${pad(range.endHour)}:00 사이여야 합니다.`;
+    }
+    if (!Number.isNaN(start) && !Number.isNaN(end) && end <= start) {
+      errors.endTime = "종료 시간은 시작 시간보다 늦어야 합니다.";
+    }
   }
   return errors;
+}
+
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+// 외부 사용 호환 — BlockDraft 형태 입력에 대한 검증.
+export function validate(draft: BlockDraft, range?: { startHour: number; endHour: number }) {
+  return validateForm({
+    courseId: draft.courseId,
+    dayOfWeek: draft.dayOfWeek,
+    startTime: draft.startTime,
+    endTime: draft.endTime,
+    memo: draft.memo ?? "",
+  }, range);
 }

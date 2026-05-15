@@ -27,22 +27,46 @@ describe("validate", () => {
 });
 
 describe("BlockEditor (create)", () => {
-  it("초기값이 기본 강의/요일/시간으로 채워진다", () => {
+  it("create 모드 초기값은 모두 빈 값", () => {
     render(
       <BlockEditor open mode="create" courses={COURSES} onSubmit={vi.fn()} onClose={vi.fn()} />,
     );
-    expect(screen.getByLabelText("강의")).toHaveValue("c1");
-    expect(screen.getByLabelText("요일")).toHaveValue("0");
+    expect(screen.getByLabelText(/강의/)).toHaveValue("");
+    expect(screen.getByLabelText(/요일/)).toHaveValue("");
+    expect(screen.getByLabelText(/시작/)).toHaveValue("");
+    expect(screen.getByLabelText(/종료/)).toHaveValue("");
   });
 
-  it("유효한 입력으로 추가하면 onSubmit이 호출된다", async () => {
+  it("필수값 미입력 상태에서 추가 누르면 onSubmit 차단 + 에러 표시", async () => {
     const onSubmit = vi.fn();
     render(
       <BlockEditor open mode="create" courses={COURSES} onSubmit={onSubmit} onClose={vi.fn()} />,
     );
-    await userEvent.selectOptions(screen.getByLabelText("강의"), "c2");
     await userEvent.click(screen.getByRole("button", { name: "추가" }));
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ courseId: "c2" }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText("강의를 선택해주세요.")).toBeInTheDocument();
+    expect(screen.getByText("요일을 선택해주세요.")).toBeInTheDocument();
+  });
+
+  it("모든 필수값 채우고 추가하면 onSubmit 호출", async () => {
+    const onSubmit = vi.fn();
+    render(
+      <BlockEditor open mode="create" courses={COURSES} onSubmit={onSubmit} onClose={vi.fn()} />,
+    );
+    await userEvent.click(screen.getByLabelText(/강의/));
+    await userEvent.click(screen.getByRole("option", { name: "영어" }));
+    await userEvent.selectOptions(screen.getByLabelText(/요일/), "2");
+    // jsdom은 input[type=time] value를 직접 set으로 채워준다.
+    await userEvent.type(screen.getByLabelText(/시작/), "09:00");
+    await userEvent.type(screen.getByLabelText(/종료/), "10:30");
+    await userEvent.click(screen.getByRole("button", { name: "추가" }));
+    expect(onSubmit).toHaveBeenCalledWith({
+      courseId: "c2",
+      dayOfWeek: 2,
+      startTime: "09:00",
+      endTime: "10:30",
+      memo: undefined,
+    });
   });
 
   it("종료 ≤ 시작이면 에러 표시 + onSubmit 차단", async () => {
@@ -50,8 +74,11 @@ describe("BlockEditor (create)", () => {
     render(
       <BlockEditor open mode="create" courses={COURSES} onSubmit={onSubmit} onClose={vi.fn()} />,
     );
-    await userEvent.selectOptions(screen.getByLabelText("시작"), "10:00");
-    await userEvent.selectOptions(screen.getByLabelText("종료"), "10:00");
+    await userEvent.click(screen.getByLabelText(/강의/));
+    await userEvent.click(screen.getByRole("option", { name: "수학" }));
+    await userEvent.selectOptions(screen.getByLabelText(/요일/), "0");
+    await userEvent.type(screen.getByLabelText(/시작/), "10:00");
+    await userEvent.type(screen.getByLabelText(/종료/), "10:00");
     await userEvent.click(screen.getByRole("button", { name: "추가" }));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
@@ -68,14 +95,13 @@ describe("BlockEditor (create)", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("memo 공백만 있으면 undefined로 정리되어 전달", async () => {
-    const onSubmit = vi.fn();
+  it("메모 글자수 카운트가 표시된다", async () => {
     render(
-      <BlockEditor open mode="create" courses={COURSES} onSubmit={onSubmit} onClose={vi.fn()} />,
+      <BlockEditor open mode="create" courses={COURSES} onSubmit={vi.fn()} onClose={vi.fn()} />,
     );
-    await userEvent.type(screen.getByLabelText("메모 (선택)"), "   ");
-    await userEvent.click(screen.getByRole("button", { name: "추가" }));
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ memo: undefined }));
+    expect(screen.getByText("0 / 200")).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("메모 (선택)"), "안녕");
+    expect(screen.getByText("2 / 200")).toBeInTheDocument();
   });
 });
 
@@ -101,10 +127,10 @@ describe("BlockEditor (edit)", () => {
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByLabelText("강의")).toHaveValue("c2");
-    expect(screen.getByLabelText("요일")).toHaveValue("3");
-    expect(screen.getByLabelText("시작")).toHaveValue("13:00");
-    expect(screen.getByLabelText("종료")).toHaveValue("14:30");
+    expect(screen.getByLabelText(/강의/)).toHaveValue("영어");
+    expect(screen.getByLabelText(/요일/)).toHaveValue("3");
+    expect(screen.getByLabelText(/시작/)).toHaveValue("13:00");
+    expect(screen.getByLabelText(/종료/)).toHaveValue("14:30");
     expect(screen.getByRole("button", { name: "삭제" })).toBeInTheDocument();
   });
 
