@@ -1,0 +1,57 @@
+/* placeholder임이 한눈에 보이도록 회색만 사용. 데이터 카드와 같은 좌표/크기 → 점프 0. */
+
+.bar {
+  display: inline-block;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-sm);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.barLabel {
+  width: 14px;
+  height: 10px;
+}
+.barDate {
+  width: 18px;
+  height: 14px;
+  margin-top: 2px;
+}
+.barTime {
+  width: 32px;
+  height: 10px;
+}
+
+.fakeCard {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 1px 0;
+  z-index: var(--z-block);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--color-gray-300);
+  background: var(--color-gray-100);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.barTitle {
+  width: 60%;
+  height: 10px;
+  animation: none;
+  background: var(--color-gray-300);
+}
+.barRange {
+  width: 40%;
+  height: 9px;
+  animation: none;
+  background: var(--color-gray-200);
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.95; }
+}

@@ -1,23 +1,27 @@
-import { WeekGrid } from "@/components/planner/WeekGrid";
-import { courses, initialBlocks } from "@/mocks/data";
-import { formatWeekRange, getWeekStart, toDayOfWeek } from "@/lib/time";
+import { PlannerView } from "@/components/planner/PlannerView";
+import {
+  formatDateKey,
+  formatWeekRange,
+  getWeekStart,
+  toDayOfWeek,
+} from "@/lib/time";
 import styles from "./page.module.css";
 
 export default function Home() {
   const now = new Date();
   const today = toDayOfWeek(now);
-  const weekStart = getWeekStart(now);
+  const weekStartDate = getWeekStart(now);
+  const weekStart = formatDateKey(weekStartDate);
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1>주간 학습 플래너</h1>
-        <p>{formatWeekRange(weekStart)}</p>
+        <p>{formatWeekRange(weekStartDate)}</p>
       </header>
-      <WeekGrid
-        blocks={initialBlocks}
-        courses={courses}
+      <PlannerView
         weekStart={weekStart}
+        weekStartDate={weekStartDate}
         todayDayOfWeek={today}
       />
     </div>
