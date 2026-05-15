@@ -1,0 +1,107 @@
+:root {
+  /* Brand */
+  --color-primary-50:  #F0FDF4;
+  --color-primary-100: #DCFCE7;
+  --color-primary-200: #BBF7D0;
+  --color-primary-400: #4ADE80;
+  --color-primary-500: #22C55E;
+  --color-primary-600: #16A34A;
+  --color-primary-700: #15803D;
+  --color-primary-800: #166534;
+
+  /* Neutral */
+  --color-gray-50:  #F9FAFB;
+  --color-gray-100: #F3F4F6;
+  --color-gray-200: #E5E7EB;
+  --color-gray-300: #D1D5DB;
+  --color-gray-400: #9CA3AF;
+  --color-gray-500: #6B7280;
+  --color-gray-600: #4B5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1F2937;
+  --color-gray-900: #111827;
+
+  /* State */
+  --color-conflict: #EF4444;
+  --color-warning:  #F59E0B;
+  --color-success:  #10B981;
+  --color-info:     #3B82F6;
+
+  /* Surface / Semantic */
+  --color-bg:            #FFFFFF;
+  --color-bg-subtle:     var(--color-gray-50);
+  --color-bg-muted:      var(--color-gray-100);
+  --color-border:        var(--color-gray-200);
+  --color-border-strong: var(--color-gray-300);
+
+  --color-text:         var(--color-gray-900);
+  --color-text-muted:   var(--color-gray-600);
+  --color-text-subtle:  var(--color-gray-500);
+  --color-text-inverse: #FFFFFF;
+
+  /* Typography */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 16px;
+  --text-lg:   20px;
+  --text-xl:   28px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-bold:    700;
+
+  --line-height-tight:  1.2;
+  --line-height-normal: 1.5;
+
+  /* Spacing (4px grid) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Transition */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+
+  /* 슬롯 높이는 lib/time의 분당 픽셀 계산과 일치해야 함 */
+  --grid-time-col-width: 60px;
+  --grid-slot-height:    40px;
+  --grid-day-count:      7;
+
+  /* Z-index */
+  --z-base:    0;
+  --z-block:   10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --grid-time-col-width: 50px;
+  }
+}
