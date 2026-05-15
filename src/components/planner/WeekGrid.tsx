@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import type { Course, DayOfWeek, StudyBlock } from "@/types";
+import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
+import type { Course, DayOfWeek, StudyBlock, TimeString } from "@/types";
 import { findConflictingIds } from "@/lib/conflict";
-import { generateTimeSlots, timeToMinutes } from "@/lib/time";
+import { generateTimeSlots, minutesToTime, timeToMinutes } from "@/lib/time";
 import { BlockCard } from "./BlockCard";
 import styles from "./WeekGrid.module.css";
 
@@ -15,6 +15,8 @@ interface Props {
   endHour?: number;
   todayDayOfWeek?: DayOfWeek | null;
   onBlockClick?: (block: StudyBlock) => void;
+  // 빈 슬롯 클릭 — 클릭한 y를 30분 단위로 스냅한 시작 시각을 넘긴다.
+  onSlotClick?: (day: DayOfWeek, startTime: TimeString) => void;
 }
 
 const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
@@ -30,6 +32,7 @@ export function WeekGrid({
   endHour = 22,
   todayDayOfWeek = null,
   onBlockClick,
+  onSlotClick,
 }: Props) {
   const dayDates = useMemo(
     () =>
@@ -49,7 +52,23 @@ export function WeekGrid({
     [startHour, endHour],
   );
   const dayStartMinutes = startHour * 60;
+  const dayEndMinutes = endHour * 60;
   const pxPerMinute = SLOT_HEIGHT_PX / SLOT_MINUTES;
+
+  // 빈 슬롯 클릭: y 좌표 → 30분 단위로 스냅한 시작 시각.
+  // 슬롯 위 padding(slot/2) 만큼 빼고 환산. 종료가 endHour를 넘지 않도록 마지막 슬롯은 제외.
+  function handleDayClick(day: DayOfWeek, e: MouseEvent<HTMLDivElement>) {
+    if (!onSlotClick) return;
+    if (e.target !== e.currentTarget) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = e.clientY - rect.top - SLOT_HEIGHT_PX / 2;
+    if (y < 0) return;
+    const rawMin = y / pxPerMinute;
+    const snapped = Math.floor(rawMin / SLOT_MINUTES) * SLOT_MINUTES;
+    const startMin = dayStartMinutes + snapped;
+    if (startMin + SLOT_MINUTES > dayEndMinutes) return;
+    onSlotClick(day, minutesToTime(startMin));
+  }
 
   const courseMap = useMemo(() => new Map(courses.map((c) => [c.id, c])), [courses]);
   const conflictingIds = useMemo(() => findConflictingIds(blocks), [blocks]);
@@ -74,7 +93,6 @@ export function WeekGrid({
     return () => clearInterval(id);
   }, []);
 
-  const dayEndMinutes = endHour * 60;
   const nowMinutes = now ? now.getHours() * 60 + now.getMinutes() : null;
   const showNow =
     nowMinutes !== null &&
@@ -135,9 +153,11 @@ export function WeekGrid({
           return (
             <div
               key={dayIndex}
-              className={styles.dayColumn}
+              className={`${styles.dayColumn} ${onSlotClick ? styles.dayColumnClickable : ""}`}
               role="group"
               aria-label={`${DAY_LABELS[dayIndex]}요일`}
+              onClick={(e) => handleDayClick(day, e)}
+              title={onSlotClick ? "빈 슬롯을 클릭해 새 블록 추가" : undefined}
             >
               {hourLabels.map((label, i) => (
                 <div

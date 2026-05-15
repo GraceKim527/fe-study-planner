@@ -98,6 +98,10 @@
   border-left: 1px dashed var(--color-border);
 }
 
+.dayColumnClickable {
+  cursor: copy;
+}
+
 /* 정시 가로선 — 옅은 점선. 첫 정시 위쪽엔 그리지 않는다. */
 .hourLine {
   position: absolute;

@@ -17,11 +17,10 @@ export interface BlockDraft {
 interface Props {
   open: boolean;
   mode: "create" | "edit";
-  initial?: EditableStudyBlock;
+  // 편집 모드: 기존 블록. 추가 모드: 부분 기본값(빈 슬롯 클릭 시 day/startTime 채워서 넘김)도 받을 수 있다.
+  initial?: EditableStudyBlock | Partial<BlockDraft>;
   courses: Course[];
-  // 추가/수정 확정. 부모가 store에 반영.
   onSubmit(draft: BlockDraft): void;
-  // 편집 모드에서만 의미 있음.
   onDelete?(): void;
   onClose(): void;
   // 그리드의 시간 범위와 동일하게 유지.
@@ -58,21 +57,12 @@ export function BlockEditor({
   );
 
   const defaults = useMemo<BlockDraft>(() => {
-    if (initial) {
-      return {
-        courseId: initial.courseId,
-        dayOfWeek: initial.dayOfWeek,
-        startTime: initial.startTime,
-        endTime: initial.endTime,
-        memo: initial.memo ?? "",
-      };
-    }
     return {
-      courseId: courses[0]?.id ?? "",
-      dayOfWeek: 0,
-      startTime: slots[0] ?? "09:00",
-      endTime: slots[2] ?? "10:00",
-      memo: "",
+      courseId: initial?.courseId ?? courses[0]?.id ?? "",
+      dayOfWeek: initial?.dayOfWeek ?? 0,
+      startTime: initial?.startTime ?? slots[0] ?? "09:00",
+      endTime: initial?.endTime ?? slots[2] ?? "10:00",
+      memo: initial?.memo ?? "",
     };
   }, [initial, courses, slots]);
 
