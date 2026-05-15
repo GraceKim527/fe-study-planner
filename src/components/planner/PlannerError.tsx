@@ -12,7 +12,7 @@ export function PlannerError({ message, onRetry }: Props) {
   return (
     <div className={styles.wrapper} role="alert">
       <div className={styles.icon} aria-hidden>
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
           <path d="M12 8V12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           <circle cx="12" cy="16" r="1" fill="currentColor" />
