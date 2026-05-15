@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MswProvider } from "@/mocks/MswProvider";
+import { QueryProvider } from "./QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <MswProvider>{children}</MswProvider>
+        <MswProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </MswProvider>
       </body>
     </html>
   );
