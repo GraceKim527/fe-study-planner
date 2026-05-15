@@ -29,7 +29,7 @@ export function WeekGrid({
   courses,
   weekStart,
   startHour = 8,
-  endHour = 22,
+  endHour = 20,
   todayDayOfWeek = null,
   onBlockClick,
   onSlotClick,

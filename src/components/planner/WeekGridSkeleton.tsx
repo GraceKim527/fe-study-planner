@@ -24,7 +24,7 @@ const FAKE_BLOCKS: Array<{ day: DayOfWeek; startMin: number; durationMin: number
   { day: 5, startMin: 13 * 60, durationMin: 60 },
 ];
 
-export function WeekGridSkeleton({ startHour = 8, endHour = 22 }: Props) {
+export function WeekGridSkeleton({ startHour = 8, endHour = 20 }: Props) {
   const slots = generateTimeSlots(startHour, endHour, SLOT_MINUTES).slice(0, -1);
   const hourLabels = Array.from(
     { length: endHour - startHour },
