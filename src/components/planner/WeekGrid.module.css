@@ -1,0 +1,170 @@
+/* 30분 슬롯 = --grid-slot-height. 가로선은 그리지 않고 카드 위주의 자유 배치. */
+.wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--color-bg);
+  padding: var(--space-5) var(--space-10) var(--space-5) var(--space-4);
+}
+
+.header {
+  display: grid;
+  grid-template-columns:
+    var(--grid-time-col-width)
+    repeat(var(--grid-day-count), minmax(var(--grid-day-min-width), 1fr));
+  min-width: var(--grid-min-width);
+  margin-bottom: var(--space-3);
+  /* body와 컬럼 정렬을 맞추려면 동일한 우측 여유. */
+  padding-right: var(--space-10);
+}
+
+.headerSpacer {
+  /* 시간 컬럼 자리 비움 */
+}
+
+.headerCell {
+  display: flex;
+  justify-content: center;
+}
+
+.dayPill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 56px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  line-height: 1;
+}
+
+.dayLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.dayDate {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.dayPillToday {
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+}
+
+.dayPillToday .dayLabel,
+.dayPillToday .dayDate {
+  color: var(--color-primary-700);
+}
+
+.body {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    var(--grid-time-col-width)
+    repeat(var(--grid-day-count), minmax(var(--grid-day-min-width), 1fr));
+  min-width: var(--grid-min-width);
+  /* 우측 여유 — 현재 시각 배지가 일요일 컬럼 바깥에 떠 있을 자리. */
+  padding-right: var(--space-10);
+}
+
+.timeColumn {
+  position: relative;
+  /* 위쪽 여유(slot/2) + 본문 + 아래쪽 여유(slot/2). */
+  height: calc(var(--grid-slot-height) * var(--rows) + var(--grid-slot-height));
+}
+
+.timeLabel {
+  position: absolute;
+  right: var(--space-2);
+  /* 위쪽 여유(slot/2) 기준으로 정시 인덱스만큼 내려옴. */
+  top: calc(
+    var(--grid-slot-height) / 2 + var(--grid-slot-height) * 2 *
+      var(--hour-index)
+  );
+  transform: translateY(-50%);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  line-height: 1;
+}
+
+.dayColumn {
+  position: relative;
+  height: calc(var(--grid-slot-height) * var(--rows) + var(--grid-slot-height));
+  border-left: 1px dashed var(--color-border);
+}
+
+/* 정시 가로선 — 옅은 점선. 첫 정시 위쪽엔 그리지 않는다. */
+.hourLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(
+    var(--grid-slot-height) / 2 + var(--grid-slot-height) * 2 *
+      var(--hour-index)
+  );
+  border-top: 1px dashed var(--color-border);
+  pointer-events: none;
+}
+
+.blockLayer {
+  position: absolute;
+  /* timeLabel과 동일하게 slot/2 위쪽 여유. */
+  top: calc(var(--grid-slot-height) / 2);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.block {
+  pointer-events: auto;
+}
+
+/* 현재 시각 라인 — day 컬럼 위에 가로로 그린다. 색은 시그니처(primary).
+   카드 본문을 가리지 않도록 z-index는 카드보다 낮게(=base).
+   우측은 body padding 영역 직전에서 멈춤(배지가 그 바깥에 위치). */
+.nowLine {
+  position: absolute;
+  left: var(--grid-time-col-width);
+  right: var(--space-10);
+  top: var(--now-top);
+  height: 2px;
+  background: var(--color-primary-600);
+  z-index: var(--z-base);
+  pointer-events: none;
+}
+
+.nowDot {
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-600);
+  /* 카드보다 위에 보이도록 — 잘리면 "현재 시각" 인지가 약해짐. */
+  z-index: var(--z-overlay);
+}
+
+/* 시각 배지 — 라인의 오른쪽 바깥, body padding 영역에 위치. */
+.nowBadge {
+  position: absolute;
+  left: calc(100% + var(--space-2));
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-primary-600);
+  color: var(--color-text-inverse);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+  z-index: var(--z-overlay);
+}
