@@ -1,33 +1,42 @@
+/* dirty일 때만 렌더 + 하단 고정. 변경 직후 슬라이드업으로 등장. */
 .bar {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-5);
+  transform: translateX(-50%);
+  width: min(720px, calc(100% - var(--space-8)));
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-3) var(--space-5);
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-primary-200);
   border-radius: var(--radius-lg);
-  transition: border-color var(--transition-base), background var(--transition-base);
-}
-
-.barDirty {
-  border-color: var(--color-primary-200);
-  background: var(--color-primary-50);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-overlay);
+  animation: saveBarRise 180ms ease-out;
 }
 
 .barError {
   border-color: var(--color-conflict);
-  background: var(--color-bg);
+}
+
+@keyframes saveBarRise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 .status {
   flex: 1;
   min-width: 0;
   font-size: var(--text-sm);
-}
-
-.cleanText {
-  color: var(--color-text-subtle);
 }
 
 .dirtyText {
@@ -111,6 +120,9 @@
 
 @media (max-width: 640px) {
   .bar {
+    /* 모바일은 화면 폭 거의 꽉. 한 줄에 다 못 들어가므로 column. */
+    width: calc(100% - var(--space-6));
+    bottom: var(--space-3);
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);

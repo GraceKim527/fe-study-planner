@@ -1,7 +1,8 @@
+/* SaveBar가 하단 floating이라 겹침 방지 + 시선 분리를 위해 상단에 띄운다. */
 .layer {
   position: fixed;
   left: 50%;
-  bottom: var(--space-8);
+  top: var(--space-5);
   transform: translateX(-50%);
   z-index: var(--z-toast);
   pointer-events: none;
@@ -40,10 +41,11 @@
   color: var(--color-text-inverse);
 }
 
+/* 상단 등장이라 아래로 내려오는 방향이 자연스럽다. */
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
