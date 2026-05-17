@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { DayOfWeek, EditableStudyBlock, StudyBlock, TimeString } from "@/types";
-import { WeekGrid } from "./WeekGrid";
-import { WeekGridSkeleton } from "./WeekGridSkeleton";
-import { WeeklySummary } from "./WeeklySummary";
-import { WeeklySummarySkeleton } from "./WeeklySummarySkeleton";
-import { SaveBar } from "./SaveBar";
-import { DayTabs } from "./DayTabs";
-import { BlockEditor, type BlockDraft } from "./BlockEditor";
+import { WeekGrid } from "./grid/WeekGrid";
+import { WeekGridSkeleton } from "./grid/WeekGridSkeleton";
+import { WeeklySummary } from "./summary/WeeklySummary";
+import { WeeklySummarySkeleton } from "./summary/WeeklySummarySkeleton";
+import { SaveBar } from "./controls/SaveBar";
+import { DayTabs } from "./controls/DayTabs";
+import { BlockEditor, type BlockDraft } from "./editor/BlockEditor";
 import { PlannerError } from "./PlannerError";
 import { Toast } from "@/components/ui/Toast";
 import { useBeforeUnload } from "@/hooks/useBeforeUnload";

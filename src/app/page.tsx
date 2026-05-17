@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { PlannerView } from "@/components/planner/PlannerView";
-import { WeekNav } from "@/components/planner/WeekNav";
+import { WeekNav } from "@/components/planner/controls/WeekNav";
 import {
   formatDateKey,
   getWeekStart,
