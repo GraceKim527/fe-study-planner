@@ -115,6 +115,28 @@
   pointer-events: none;
 }
 
+/* 빈 슬롯 hover preview — 클릭하면 여기 생긴다는 시각 힌트. */
+.slotPreview {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 1px 0;
+  border: 1px dashed var(--color-primary-500);
+  border-left: 4px solid var(--color-primary-500);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: var(--z-base);
+}
+
+/* 터치 환경에선 hover 개념이 없음. */
+@media (hover: none) {
+  .slotPreview {
+    display: none;
+  }
+}
+
 .blockLayer {
   position: absolute;
   /* timeLabel과 동일하게 slot/2 위쪽 여유. */
@@ -171,4 +193,30 @@
   line-height: 1;
   white-space: nowrap;
   z-index: var(--z-overlay);
+}
+
+/* 모바일 — 일별 뷰. 시간축 + 선택된 1일.
+   숨길 컬럼/헤더는 PlannerView가 selectedDay 기준으로 <style> 태그를 주입해 처리한다(깜빡임 0).
+   여기서는 레이아웃만 1컬럼 구조로 바꾼다. */
+@media (max-width: 640px) {
+  .wrapper {
+    overflow-x: hidden;
+    padding: var(--space-3) var(--space-2);
+  }
+  .header,
+  .body {
+    grid-template-columns: var(--grid-time-col-width) 1fr;
+    min-width: 0;
+    padding-right: 0;
+  }
+  .nowLine {
+    right: 0;
+  }
+  .nowBadge {
+    /* 오른쪽 바깥 공간이 없으므로 라인 위쪽에 작게. */
+    left: auto;
+    right: var(--space-2);
+    top: -10px;
+    transform: none;
+  }
 }

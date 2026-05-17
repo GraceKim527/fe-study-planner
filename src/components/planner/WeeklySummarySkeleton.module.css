@@ -1,0 +1,71 @@
+/* WeekGridSkeleton과 같은 shimmer/회색 톤으로 통일. 실데이터와 같은 위치·높이 → 점프 0. */
+
+.bar {
+  display: inline-block;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-sm);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.totalLabel {
+  width: 120px;
+  height: 12px;
+}
+
+.totalValue {
+  width: 120px;
+  height: 32px;
+  background: var(--color-primary-200);
+}
+
+.totalMeta {
+  width: 90px;
+  height: 12px;
+  background: var(--color-primary-100);
+}
+
+.chartTitle {
+  width: 40px;
+  height: 12px;
+}
+
+.courseTitle {
+  width: 80%;
+  height: 12px;
+}
+
+.courseValue {
+  width: 48px;
+  height: 12px;
+}
+
+.coursePct {
+  width: 28px;
+  height: 12px;
+  justify-self: end;
+}
+
+.dayLabel {
+  width: 14px;
+  height: 10px;
+}
+
+.dayValue {
+  width: 24px;
+  height: 10px;
+}
+
+.barFillSkeleton {
+  background: var(--color-gray-300) !important;
+  animation: none;
+}
+
+.dayBarFillSkeleton {
+  background: var(--color-gray-300) !important;
+  animation: none;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.95; }
+}
