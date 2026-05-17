@@ -70,14 +70,27 @@ export const usePlannerStore = create<PlannerState>((set) => ({
 // 같은 길이 + 모든 항목이 id-by-id로 동일 필드값이어야 not dirty.
 // 신규 블록(isNew)이 하나라도 있으면 dirty (original엔 없음).
 export function isDirty(state: PlannerState): boolean {
-  const { blocks, original } = state;
-  if (blocks.length !== original.length) return true;
+  return countChanges(state) > 0;
+}
 
+// 추가/수정/삭제된 블록의 총 개수. SaveBar의 "변경사항 N개" 표시에 사용.
+export function countChanges(state: PlannerState): number {
+  const { blocks, original } = state;
   const orig = new Map(original.map((b) => [b.id, b]));
+  const seen = new Set<string>();
+  let changes = 0;
+
   for (const b of blocks) {
-    if (b.isNew) return true;
+    if (b.isNew) {
+      changes += 1;
+      continue;
+    }
+    seen.add(b.id);
     const o = orig.get(b.id);
-    if (!o) return true;
+    if (!o) {
+      changes += 1;
+      continue;
+    }
     if (
       o.courseId !== b.courseId ||
       o.dayOfWeek !== b.dayOfWeek ||
@@ -85,10 +98,14 @@ export function isDirty(state: PlannerState): boolean {
       o.endTime !== b.endTime ||
       (o.memo ?? "") !== (b.memo ?? "")
     ) {
-      return true;
+      changes += 1;
     }
   }
-  return false;
+  // 삭제된 블록(original에는 있는데 현재 blocks엔 없음)
+  for (const o of original) {
+    if (!seen.has(o.id)) changes += 1;
+  }
+  return changes;
 }
 
 // 저장 페이로드 변환 — isNew 블록은 id 제거.

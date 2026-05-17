@@ -5,11 +5,15 @@ import type { DayOfWeek, EditableStudyBlock, StudyBlock, TimeString } from "@/ty
 import { WeekGrid } from "./WeekGrid";
 import { WeekGridSkeleton } from "./WeekGridSkeleton";
 import { WeeklySummary } from "./WeeklySummary";
+import { SaveBar } from "./SaveBar";
 import { BlockEditor, type BlockDraft } from "./BlockEditor";
 import { PlannerError } from "./PlannerError";
+import { Toast } from "@/components/ui/Toast";
 import { useCourses } from "@/hooks/useCourses";
 import { usePlanner } from "@/hooks/usePlanner";
-import { usePlannerStore } from "@/stores/plannerStore";
+import { useSavePlanner } from "@/hooks/useSavePlanner";
+import { countChanges, toSaveRequestBlocks, usePlannerStore } from "@/stores/plannerStore";
+import { ApiError } from "@/api/client";
 import { minutesToTime, timeToMinutes } from "@/lib/time";
 
 type CreatePreset = { dayOfWeek: DayOfWeek; startTime: TimeString; endTime: TimeString };
@@ -33,8 +37,13 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
   const addBlock = usePlannerStore((s) => s.addBlock);
   const updateBlock = usePlannerStore((s) => s.updateBlock);
   const removeBlock = usePlannerStore((s) => s.removeBlock);
+  const reset = usePlannerStore((s) => s.reset);
+  const changeCount = usePlannerStore(countChanges);
+  const dirty = changeCount > 0;
 
   const [editor, setEditor] = useState<EditorState>({ kind: "closed" });
+  const [toastOpen, setToastOpen] = useState(false);
+  const save = useSavePlanner({ onSuccess: () => setToastOpen(true) });
 
   // 서버 응답이 들어오거나 weekStart가 바뀔 때마다 편집 스토어를 다시 채운다.
   useEffect(() => {
@@ -73,9 +82,25 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
     setEditor({ kind: "closed" });
   }
 
+  function handleSave() {
+    if (!dirty) return;
+    save.save({ weekStart, blocks: toSaveRequestBlocks(blocks) });
+  }
+
+  const saveError = save.error instanceof ApiError ? save.error : undefined;
+
   return (
     <>
       <WeeklySummary blocks={blocks} courses={courses.data.courses} />
+      <SaveBar
+        dirty={dirty}
+        changeCount={changeCount}
+        isSaving={save.isPending}
+        errorKind={saveError?.kind}
+        errorMessage={save.error?.message}
+        onSave={handleSave}
+        onReset={reset}
+      />
       <WeekGrid
         blocks={blocks}
         courses={courses.data.courses}
@@ -87,6 +112,12 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
           const endTime = minutesToTime(timeToMinutes(startTime) + 60);
           setEditor({ kind: "create", preset: { dayOfWeek, startTime, endTime } });
         }}
+      />
+      <Toast
+        open={toastOpen}
+        message="저장되었습니다"
+        tone="success"
+        onClose={() => setToastOpen(false)}
       />
       {editor.kind !== "closed" && (
         <BlockEditor
