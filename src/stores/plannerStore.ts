@@ -9,9 +9,6 @@ import type {
 
 // "편집 중 상태"만 담는다. 서버 상태는 TanStack Query.
 // dirty 판정은 hydrate 시점의 original 스냅샷과 현재 blocks 비교.
-//
-// 신규 블록: 클라에서 임시 id(crypto.randomUUID) + isNew=true.
-// 저장 직전 isNew=true 블록은 id를 빼고 SavePlannerRequest로 변환한다.
 
 interface PlannerState {
   blocks: EditableStudyBlock[];
@@ -73,7 +70,6 @@ export function isDirty(state: PlannerState): boolean {
   return countChanges(state) > 0;
 }
 
-// 추가/수정/삭제된 블록의 총 개수. SaveBar의 "변경사항 N개" 표시에 사용.
 export function countChanges(state: PlannerState): number {
   const { blocks, original } = state;
   const orig = new Map(original.map((b) => [b.id, b]));

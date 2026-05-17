@@ -95,7 +95,6 @@ export function BlockEditor({
     e.preventDefault();
     setSubmitted(true);
     if (hasError) {
-      // 위에서부터 첫 에러 필드로 포커스.
       if (errors.courseId) courseInputRef.current?.focus();
       else if (errors.dayOfWeek) dayRef.current?.focus();
       else if (errors.startTime || errors.endTime) startHourRef.current?.focus();
@@ -295,7 +294,6 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-// 외부 사용 호환 — BlockDraft 형태 입력에 대한 검증.
 export function validate(draft: BlockDraft, range?: { startHour: number; endHour: number }) {
   return validateForm({
     courseId: draft.courseId,

@@ -54,10 +54,8 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(todayDayOfWeek ?? 0);
   const save = useSavePlanner({ onSuccess: () => setToastOpen(true) });
 
-  // 미저장 변경이 있거나 저장 진행 중이면 새로고침/닫기 시 브라우저가 확인 다이얼로그를 띄움.
   useBeforeUnload(dirty || save.isPending);
 
-  // 서버 응답이 들어오거나 weekStart가 바뀔 때마다 편집 스토어를 다시 채운다.
   useEffect(() => {
     if (planner.data) {
       hydrate(planner.data.weekStart, planner.data.blocks);
@@ -98,7 +96,6 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
 
   const hasError = courses.isError || planner.isError;
   const isLoading = courses.isPending || planner.isPending;
-  // courses/planner 둘 다 도착했고 에러도 없을 때만 실데이터 영역 노출.
   const ready = !isLoading && !hasError && courses.data && planner.data;
 
   // 모바일 일별 뷰에서 selectedDay 외 컬럼/헤더를 숨기는 CSS.
@@ -127,7 +124,6 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
         />
       )}
 
-      {/* 변경사항이 있을 때만 하단에 floating으로 등장. */}
       {ready && dirty && (
         <SaveBar
           changeCount={changeCount}

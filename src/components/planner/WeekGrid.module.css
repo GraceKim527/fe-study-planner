@@ -147,13 +147,7 @@
   pointer-events: none;
 }
 
-.block {
-  pointer-events: auto;
-}
-
-/* 현재 시각 라인 — day 컬럼 위에 가로로 그린다. 색은 시그니처(primary).
-   카드 본문을 가리지 않도록 z-index는 카드보다 낮게(=base).
-   우측은 body padding 영역 직전에서 멈춤(배지가 그 바깥에 위치). */
+/* 현재 시각 라인 — z-index는 카드보다 낮게(=base). 배지는 body padding 영역 바깥. */
 .nowLine {
   position: absolute;
   left: var(--grid-time-col-width);
