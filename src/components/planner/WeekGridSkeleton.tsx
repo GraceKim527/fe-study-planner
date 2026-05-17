@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { DayOfWeek } from "@/types";
+import { DAY_LABELS } from "@/lib/day";
 import { generateTimeSlots } from "@/lib/time";
 import gridStyles from "./WeekGrid.module.css";
 import styles from "./WeekGridSkeleton.module.css";
@@ -9,12 +10,10 @@ interface Props {
   endHour?: number;
 }
 
-const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 const SLOT_HEIGHT_PX = 40;
 const SLOT_MINUTES = 30;
 const PX_PER_MINUTE = SLOT_HEIGHT_PX / SLOT_MINUTES;
 
-// 다양한 요일/시작/길이로 흩뿌려서 placeholder임이 한눈에 보이게.
 const FAKE_BLOCKS: Array<{ day: DayOfWeek; startMin: number; durationMin: number }> = [
   { day: 0, startMin: 9 * 60, durationMin: 90 },
   { day: 1, startMin: 11 * 60, durationMin: 60 },

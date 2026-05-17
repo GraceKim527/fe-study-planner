@@ -1,9 +1,8 @@
 "use client";
 
 import type { DayOfWeek } from "@/types";
+import { DAY_LABELS } from "@/lib/day";
 import styles from "./DayTabs.module.css";
-
-const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 
 interface Props {
   selected: DayOfWeek;
@@ -13,7 +12,6 @@ interface Props {
   className?: string;
 }
 
-// 모바일 일별 뷰 전환용 요일 탭. CSS로 모바일에서만 노출.
 export function DayTabs({ selected, todayDayOfWeek = null, dayDates, onChange, className }: Props) {
   return (
     <div

@@ -3,6 +3,7 @@
 import { useMemo, type CSSProperties } from "react";
 import type { Course, DayOfWeek, StudyBlock } from "@/types";
 import { summarizeWeek } from "@/lib/summary";
+import { DAY_LABELS } from "@/lib/day";
 import { formatDuration } from "@/lib/time";
 import styles from "./WeeklySummary.module.css";
 
@@ -11,20 +12,10 @@ interface Props {
   courses: Course[];
 }
 
-const DAY_LABELS: Record<DayOfWeek, string> = {
-  0: "월",
-  1: "화",
-  2: "수",
-  3: "목",
-  4: "금",
-  5: "토",
-  6: "일",
-};
-
 export function WeeklySummary({ blocks, courses }: Props) {
   const summary = useMemo(() => summarizeWeek(blocks, courses), [blocks, courses]);
+  // summarizeWeek와 동일한 기준(알 수 없는 강의 제외).
   const blockCount = useMemo(
-    // byCourse는 알 수 없는 강의·길이 0 이하를 제외하므로 totals와 동일한 기준으로 카운트.
     () => blocks.filter((b) => courses.some((c) => c.id === b.courseId)).length,
     [blocks, courses],
   );
@@ -88,33 +79,32 @@ export function WeeklySummary({ blocks, courses }: Props) {
           <div className={styles.chartCard} aria-label="요일별 학습 시간">
             <h3 className={styles.chartTitle}>요일별</h3>
             <ol className={styles.dayChart}>
-              {(Object.keys(DAY_LABELS) as unknown as DayOfWeek[])
-                .map((d) => Number(d) as DayOfWeek)
-                .map((day) => {
-                  const minutes = summary.byDay[day];
-                  const heightPct = maxDayMinutes === 0 ? 0 : (minutes / maxDayMinutes) * 100;
-                  return (
-                    <li key={day} className={styles.dayItem}>
-                      <div
-                        className={styles.dayBarTrack}
-                        role="progressbar"
-                        aria-valuenow={minutes}
-                        aria-valuemin={0}
-                        aria-valuemax={maxDayMinutes || 1}
-                        aria-label={`${DAY_LABELS[day]}요일 ${formatDuration(minutes)}`}
-                      >
-                        <span
-                          className={styles.dayBarFill}
-                          style={{ height: `${heightPct}%` } as CSSProperties}
-                        />
-                      </div>
-                      <span className={styles.dayLabel}>{DAY_LABELS[day]}</span>
-                      <span className={styles.dayValue}>
-                        {minutes > 0 ? formatDuration(minutes) : "—"}
-                      </span>
-                    </li>
-                  );
-                })}
+              {DAY_LABELS.map((label, i) => {
+                const day = i as DayOfWeek;
+                const minutes = summary.byDay[day];
+                const heightPct = maxDayMinutes === 0 ? 0 : (minutes / maxDayMinutes) * 100;
+                return (
+                  <li key={day} className={styles.dayItem}>
+                    <div
+                      className={styles.dayBarTrack}
+                      role="progressbar"
+                      aria-valuenow={minutes}
+                      aria-valuemin={0}
+                      aria-valuemax={maxDayMinutes || 1}
+                      aria-label={`${label}요일 ${formatDuration(minutes)}`}
+                    >
+                      <span
+                        className={styles.dayBarFill}
+                        style={{ height: `${heightPct}%` } as CSSProperties}
+                      />
+                    </div>
+                    <span className={styles.dayLabel}>{label}</span>
+                    <span className={styles.dayValue}>
+                      {minutes > 0 ? formatDuration(minutes) : "—"}
+                    </span>
+                  </li>
+                );
+              })}
             </ol>
           </div>
         </div>

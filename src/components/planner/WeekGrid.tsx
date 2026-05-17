@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
 import type { Course, DayOfWeek, StudyBlock, TimeString } from "@/types";
 import { findConflictingIds } from "@/lib/conflict";
+import { DAY_LABELS } from "@/lib/day";
 import { generateTimeSlots, minutesToTime, timeToMinutes } from "@/lib/time";
 import { BlockCard } from "./BlockCard";
 import styles from "./WeekGrid.module.css";
 
-// 빈 슬롯 hover preview의 기본 길이. handleSlotClick의 새 블록 기본값과 동기화.
 const PREVIEW_MINUTES = 60;
 
 interface Props {
@@ -18,11 +18,9 @@ interface Props {
   endHour?: number;
   todayDayOfWeek?: DayOfWeek | null;
   onBlockClick?: (block: StudyBlock) => void;
-  // 빈 슬롯 클릭 — 클릭한 y를 30분 단위로 스냅한 시작 시각을 넘긴다.
   onSlotClick?: (day: DayOfWeek, startTime: TimeString) => void;
 }
 
-const DAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 const SLOT_MINUTES = 30;
 // tokens.css의 --grid-slot-height와 동기화 필요.
 const SLOT_HEIGHT_PX = 40;
@@ -50,7 +48,7 @@ export function WeekGrid({
     () => generateTimeSlots(startHour, endHour, SLOT_MINUTES).slice(0, -1),
     [startHour, endHour],
   );
-  // 마지막 정시(endHour:00) 라벨까지 포함. 그리드 하단 slot/2 여유에 정확히 들어맞음.
+  // endHour:00까지 포함 — 그리드 하단 slot/2 여유에 들어맞음.
   const hourLabels = useMemo(
     () => Array.from({ length: endHour - startHour + 1 }, (_, i) => `${String(startHour + i).padStart(2, "0")}:00`),
     [startHour, endHour],
@@ -59,8 +57,7 @@ export function WeekGrid({
   const dayEndMinutes = endHour * 60;
   const pxPerMinute = SLOT_HEIGHT_PX / SLOT_MINUTES;
 
-  // y 좌표 → 30분 스냅된 시작 분. 슬롯 위 padding(slot/2) 만큼 빼고 환산.
-  // 클릭/preview 둘 다 이걸 거쳐 결과가 한 칸 어긋나지 않게 한다.
+  // 슬롯 위 padding(slot/2) 만큼 빼고 30분 스냅. 클릭/preview 모두 이걸 거쳐 위치가 어긋나지 않음.
   function snapToStartMin(rect: DOMRect, clientY: number): number | null {
     const y = clientY - rect.top - SLOT_HEIGHT_PX / 2;
     if (y < 0) return null;
@@ -69,7 +66,6 @@ export function WeekGrid({
     return dayStartMinutes + snapped;
   }
 
-  // 빈 슬롯 클릭: 종료가 endHour를 넘지 않도록 마지막 슬롯은 제외.
   function handleDayClick(day: DayOfWeek, e: MouseEvent<HTMLDivElement>) {
     if (!onSlotClick) return;
     if (e.target !== e.currentTarget) return;
@@ -93,9 +89,7 @@ export function WeekGrid({
 
   const gridStyle: CSSProperties = { ["--rows" as string]: slots.length };
 
-  // 빈 슬롯 hover preview — 마우스 따라다니는 흐릿한 1시간 블록.
-  // 클릭과 동일한 30분 스냅 위치라 클릭 결과와 정확히 일치.
-  // 기존 블록 위에선 BlockCard가 위에 있어서 e.target이 dayColumn이 아니므로 자동으로 숨겨진다.
+  // 기존 블록 위에선 e.target이 dayColumn이 아니라 자동으로 숨김.
   const [preview, setPreview] = useState<{ day: DayOfWeek; topPx: number; heightPx: number } | null>(null);
 
   function handleDayMouseMove(day: DayOfWeek, e: MouseEvent<HTMLDivElement>) {
@@ -123,7 +117,7 @@ export function WeekGrid({
     if (preview) setPreview(null);
   }
 
-  // 현재 시각 라인. SSR 시 mismatch 방지를 위해 마운트 전엔 null.
+  // SSR hydration mismatch 방지.
   const [now, setNow] = useState<Date | null>(() =>
     typeof window === "undefined" ? null : new Date(),
   );
@@ -201,7 +195,6 @@ export function WeekGrid({
               onMouseLeave={handleDayMouseLeave}
               title={onSlotClick ? "빈 슬롯을 클릭해 새 블록 추가" : undefined}
             >
-              {/* 정시 점선은 라벨 사이 구분선이므로 마지막 정시(endHour:00) 위치엔 안 그림. */}
               {hourLabels.slice(0, -1).map((label, i) => (
                 <div
                   key={`line-${label}`}

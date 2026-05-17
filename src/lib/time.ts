@@ -1,4 +1,5 @@
 import type { DayOfWeek, TimeString } from "@/types";
+import { DAY_LABELS } from "./day";
 
 const MINUTES_PER_HOUR = 60;
 const HOURS_PER_DAY = 24;
@@ -20,7 +21,7 @@ export function minutesToTime(minutes: number): TimeString {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-// startHour 포함, endHour 포함. step은 분 단위 (30 또는 60).
+// startHour, endHour 모두 포함.
 export function generateTimeSlots(
   startHour: number,
   endHour: number,
@@ -35,13 +36,12 @@ export function generateTimeSlots(
   return slots;
 }
 
-// Date.getDay()는 0(일)~6(토). 본 도메인은 0(월)~6(일)이라 변환 필요.
+// Date.getDay()는 0(일)~6(토). 도메인은 0(월)~6(일).
 export function toDayOfWeek(date: Date): DayOfWeek {
   const jsDay = date.getDay();
   return ((jsDay + 6) % 7) as DayOfWeek;
 }
 
-// 기준 날짜가 속한 주의 월요일 00:00 (로컬 타임존).
 export function getWeekStart(date: Date): Date {
   const day = toDayOfWeek(date);
   const monday = new Date(date);
@@ -50,8 +50,7 @@ export function getWeekStart(date: Date): Date {
   return monday;
 }
 
-// "YYYY-MM-DD" → 로컬 타임존 00:00 Date. 잘못된 형식이면 null.
-// new Date("2026-05-11")은 UTC 자정으로 해석돼서 타임존에 따라 하루 밀린다. 명시적으로 로컬 생성.
+// new Date("2026-05-11")은 UTC 자정 → 타임존에 따라 하루 밀림. 명시적으로 로컬 생성.
 export function parseDateKey(key: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
   if (!match) return null;
@@ -67,14 +66,13 @@ export function parseDateKey(key: string): Date | null {
   return date;
 }
 
-// weekStart(월요일)에서 delta주만큼 이동한 월요일.
 export function addWeeks(weekStart: Date, delta: number): Date {
   const next = new Date(weekStart);
   next.setDate(weekStart.getDate() + delta * 7);
   return next;
 }
 
-// "YYYY-MM-DD" 로컬 기준. ISO UTC 변환은 timezone 이슈가 있어 의도적으로 로컬 포맷.
+// toISOString() 쓰면 UTC라 타임존에 따라 하루 밀림.
 export function formatDateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -86,13 +84,11 @@ export function formatTimeRange(start: TimeString, end: TimeString): string {
   return `${start} - ${end}`;
 }
 
-// "5월 11일(월) – 5월 17일(일)" 형태. 헤더용.
-const WEEK_LABELS = ["월", "화", "수", "목", "금", "토", "일"] as const;
 export function formatWeekRange(weekStart: Date): string {
   const end = new Date(weekStart);
   end.setDate(end.getDate() + 6);
   const fmt = (d: Date) =>
-    `${d.getMonth() + 1}월 ${d.getDate()}일(${WEEK_LABELS[toDayOfWeek(d)]})`;
+    `${d.getMonth() + 1}월 ${d.getDate()}일(${DAY_LABELS[toDayOfWeek(d)]})`;
   return `${fmt(weekStart)} – ${fmt(end)}`;
 }
 
