@@ -9,6 +9,7 @@ import { SaveBar } from "./SaveBar";
 import { BlockEditor, type BlockDraft } from "./BlockEditor";
 import { PlannerError } from "./PlannerError";
 import { Toast } from "@/components/ui/Toast";
+import { useBeforeUnload } from "@/hooks/useBeforeUnload";
 import { useCourses } from "@/hooks/useCourses";
 import { usePlanner } from "@/hooks/usePlanner";
 import { useSavePlanner } from "@/hooks/useSavePlanner";
@@ -47,6 +48,9 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
   const [editor, setEditor] = useState<EditorState>({ kind: "closed" });
   const [toastOpen, setToastOpen] = useState(false);
   const save = useSavePlanner({ onSuccess: () => setToastOpen(true) });
+
+  // 미저장 변경이 있거나 저장 진행 중이면 새로고침/닫기 시 브라우저가 확인 다이얼로그를 띄움.
+  useBeforeUnload(dirty || save.isPending);
 
   // 서버 응답이 들어오거나 weekStart가 바뀔 때마다 편집 스토어를 다시 채운다.
   useEffect(() => {
