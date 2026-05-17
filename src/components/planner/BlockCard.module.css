@@ -5,6 +5,9 @@
   /* 위/아래 1px 미세 여백 — 카드끼리 살짝 분리. 좌우는 컬럼에 꽉. */
   margin: 1px 0;
   z-index: var(--z-block);
+  /* 부모 blockLayer가 pointer-events:none이라 카드만 명시적으로 살린다. */
+  pointer-events: auto;
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
   /* 왼쪽 컬러 바 */
@@ -13,7 +16,10 @@
   cursor: pointer;
   overflow: hidden;
   text-align: left;
-  transition: filter var(--transition-fast), transform var(--transition-fast);
+  transition:
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    border-color var(--transition-fast);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -21,10 +27,20 @@
   line-height: var(--line-height-tight);
 }
 
-.card:hover,
-.card:focus-visible {
-  filter: brightness(0.97);
+.card:hover {
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--block-color, var(--color-primary-500));
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--block-color, var(--color-primary-500));
+  outline-offset: 2px;
+}
+
+.card:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .title {

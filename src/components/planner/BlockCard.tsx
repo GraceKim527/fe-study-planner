@@ -33,7 +33,10 @@ export function BlockCard({ block, course, conflict, pxPerMinute, dayStartMinute
       className={`${styles.card} ${conflict ? styles.conflict : ""}`}
       style={style}
       aria-label={`${course.title} ${formatTimeRange(block.startTime, block.endTime)}${conflict ? " (시간 충돌)" : ""}`}
-      onClick={() => onClick?.(block)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(block);
+      }}
     >
       <span className={styles.title}>{course.title}</span>
       <span className={styles.range}>{formatTimeRange(block.startTime, block.endTime)}</span>
