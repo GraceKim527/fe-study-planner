@@ -100,3 +100,22 @@ export function formatDuration(minutes: number): string {
   if (m === 0) return `${h}시간`;
   return `${h}시간 ${m}분`;
 }
+
+interface SnapOptions {
+  slotMinutes: number;
+  slotHeightPx: number;
+  dayStartMinutes: number;
+  // 컨테이너 상단 padding(slot/2 등). 이 영역 안이면 null 반환.
+  topPaddingPx?: number;
+}
+
+// 그리드 컨테이너 내 offsetY를 slotMinutes 단위로 스냅한 시작 분으로 변환.
+// topPaddingPx 위 영역(=음수 y)이면 null.
+export function snapYToMinute(offsetY: number, opts: SnapOptions): number | null {
+  const adjusted = offsetY - (opts.topPaddingPx ?? 0);
+  if (adjusted < 0) return null;
+  const pxPerMinute = opts.slotHeightPx / opts.slotMinutes;
+  const rawMin = adjusted / pxPerMinute;
+  const snapped = Math.floor(rawMin / opts.slotMinutes) * opts.slotMinutes;
+  return opts.dayStartMinutes + snapped;
+}

@@ -11,6 +11,7 @@ import {
   formatWeekRange,
   parseDateKey,
   addWeeks,
+  snapYToMinute,
 } from "./time";
 
 describe("timeToMinutes", () => {
@@ -201,5 +202,49 @@ describe("formatWeekRange", () => {
   it("월말을 넘어가는 주도 정상 처리한다", () => {
     const monday = new Date(2026, 4, 25);
     expect(formatWeekRange(monday)).toBe("5월 25일(월) – 5월 31일(일)");
+  });
+});
+
+describe("snapYToMinute", () => {
+  // WeekGrid 기본 설정: 30분 슬롯 = 40px, 08:00 시작, 상단 패딩 20px.
+  const opts = {
+    slotMinutes: 30,
+    slotHeightPx: 40,
+    dayStartMinutes: 8 * 60,
+    topPaddingPx: 20,
+  };
+
+  it("상단 패딩 영역(y < topPadding)은 null", () => {
+    expect(snapYToMinute(0, opts)).toBeNull();
+    expect(snapYToMinute(19, opts)).toBeNull();
+  });
+
+  it("패딩 직후 첫 슬롯은 dayStartMinutes (08:00 = 480)", () => {
+    expect(snapYToMinute(20, opts)).toBe(480);
+  });
+
+  it("30분 칸 안의 모든 y는 같은 시작 분으로 floor 스냅", () => {
+    // [20, 60) → 08:00 (480), [60, 100) → 08:30 (510)
+    expect(snapYToMinute(20, opts)).toBe(480);
+    expect(snapYToMinute(39, opts)).toBe(480);
+    expect(snapYToMinute(59, opts)).toBe(480);
+    expect(snapYToMinute(60, opts)).toBe(510);
+    expect(snapYToMinute(99, opts)).toBe(510);
+    expect(snapYToMinute(100, opts)).toBe(540);
+  });
+
+  it("dayStartMinutes를 바꾸면 결과가 그만큼 이동", () => {
+    const shifted = { ...opts, dayStartMinutes: 9 * 60 };
+    expect(snapYToMinute(20, shifted)).toBe(540);
+  });
+
+  it("topPaddingPx 미지정은 0으로 취급", () => {
+    const noPad = { slotMinutes: 30, slotHeightPx: 40, dayStartMinutes: 480 };
+    expect(snapYToMinute(0, noPad)).toBe(480);
+    expect(snapYToMinute(40, noPad)).toBe(510);
+  });
+
+  it("음수 offsetY는 null", () => {
+    expect(snapYToMinute(-1, opts)).toBeNull();
   });
 });

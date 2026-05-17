@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties, type MouseEvent } fro
 import type { Course, DayOfWeek, StudyBlock, TimeString } from "@/types";
 import { findConflictingIds } from "@/lib/conflict";
 import { DAY_LABELS } from "@/lib/day";
-import { generateTimeSlots, minutesToTime, timeToMinutes } from "@/lib/time";
+import { generateTimeSlots, minutesToTime, snapYToMinute, timeToMinutes } from "@/lib/time";
 import { BlockCard } from "./BlockCard";
 import styles from "./WeekGrid.module.css";
 
@@ -56,20 +56,18 @@ export function WeekGrid({
   const dayStartMinutes = startHour * 60;
   const dayEndMinutes = endHour * 60;
   const pxPerMinute = SLOT_HEIGHT_PX / SLOT_MINUTES;
-
-  // 슬롯 위 padding(slot/2) 만큼 빼고 30분 스냅. 클릭/preview 모두 이걸 거쳐 위치가 어긋나지 않음.
-  function snapToStartMin(rect: DOMRect, clientY: number): number | null {
-    const y = clientY - rect.top - SLOT_HEIGHT_PX / 2;
-    if (y < 0) return null;
-    const rawMin = y / pxPerMinute;
-    const snapped = Math.floor(rawMin / SLOT_MINUTES) * SLOT_MINUTES;
-    return dayStartMinutes + snapped;
-  }
+  const snapOpts = {
+    slotMinutes: SLOT_MINUTES,
+    slotHeightPx: SLOT_HEIGHT_PX,
+    dayStartMinutes,
+    topPaddingPx: SLOT_HEIGHT_PX / 2,
+  };
 
   function handleDayClick(day: DayOfWeek, e: MouseEvent<HTMLDivElement>) {
     if (!onSlotClick) return;
     if (e.target !== e.currentTarget) return;
-    const startMin = snapToStartMin(e.currentTarget.getBoundingClientRect(), e.clientY);
+    const offsetY = e.clientY - e.currentTarget.getBoundingClientRect().top;
+    const startMin = snapYToMinute(offsetY, snapOpts);
     if (startMin === null) return;
     if (startMin + SLOT_MINUTES > dayEndMinutes) return;
     onSlotClick(day, minutesToTime(startMin));
@@ -98,7 +96,8 @@ export function WeekGrid({
       if (preview) setPreview(null);
       return;
     }
-    const startMin = snapToStartMin(e.currentTarget.getBoundingClientRect(), e.clientY);
+    const offsetY = e.clientY - e.currentTarget.getBoundingClientRect().top;
+    const startMin = snapYToMinute(offsetY, snapOpts);
     if (startMin === null) {
       if (preview) setPreview(null);
       return;
