@@ -9,6 +9,8 @@ import {
   formatTimeRange,
   formatDuration,
   formatWeekRange,
+  parseDateKey,
+  addWeeks,
 } from "./time";
 
 describe("timeToMinutes", () => {
@@ -134,6 +136,59 @@ describe("formatDuration", () => {
 
   it("시간+분", () => {
     expect(formatDuration(90)).toBe("1시간 30분");
+  });
+});
+
+describe("parseDateKey", () => {
+  it("YYYY-MM-DD를 로컬 타임존 Date로 파싱한다", () => {
+    const date = parseDateKey("2026-05-11");
+    expect(date).not.toBeNull();
+    expect(date!.getFullYear()).toBe(2026);
+    expect(date!.getMonth()).toBe(4);
+    expect(date!.getDate()).toBe(11);
+    expect(date!.getHours()).toBe(0);
+  });
+
+  it("잘못된 형식이면 null", () => {
+    expect(parseDateKey("2026/05/11")).toBeNull();
+    expect(parseDateKey("2026-5-11")).toBeNull();
+    expect(parseDateKey("")).toBeNull();
+    expect(parseDateKey("invalid")).toBeNull();
+  });
+
+  it("존재하지 않는 날짜는 null (2월 30일 등)", () => {
+    expect(parseDateKey("2026-02-30")).toBeNull();
+    expect(parseDateKey("2026-13-01")).toBeNull();
+  });
+
+  it("formatDateKey의 역연산", () => {
+    const date = new Date(2026, 4, 11);
+    expect(formatDateKey(parseDateKey(formatDateKey(date))!)).toBe("2026-05-11");
+  });
+});
+
+describe("addWeeks", () => {
+  it("+1주는 7일 후 같은 요일", () => {
+    const monday = new Date(2026, 4, 11);
+    const next = addWeeks(monday, 1);
+    expect(formatDateKey(next)).toBe("2026-05-18");
+  });
+
+  it("-1주는 7일 전", () => {
+    const monday = new Date(2026, 4, 11);
+    const prev = addWeeks(monday, -1);
+    expect(formatDateKey(prev)).toBe("2026-05-04");
+  });
+
+  it("월 경계 넘기기", () => {
+    const monday = new Date(2026, 4, 25);
+    const next = addWeeks(monday, 1);
+    expect(formatDateKey(next)).toBe("2026-06-01");
+  });
+
+  it("0은 그대로", () => {
+    const monday = new Date(2026, 4, 11);
+    expect(formatDateKey(addWeeks(monday, 0))).toBe("2026-05-11");
   });
 });
 

@@ -50,6 +50,30 @@ export function getWeekStart(date: Date): Date {
   return monday;
 }
 
+// "YYYY-MM-DD" → 로컬 타임존 00:00 Date. 잘못된 형식이면 null.
+// new Date("2026-05-11")은 UTC 자정으로 해석돼서 타임존에 따라 하루 밀린다. 명시적으로 로컬 생성.
+export function parseDateKey(key: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+  if (!match) return null;
+  const [, y, m, d] = match;
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  if (
+    date.getFullYear() !== Number(y) ||
+    date.getMonth() !== Number(m) - 1 ||
+    date.getDate() !== Number(d)
+  ) {
+    return null;
+  }
+  return date;
+}
+
+// weekStart(월요일)에서 delta주만큼 이동한 월요일.
+export function addWeeks(weekStart: Date, delta: number): Date {
+  const next = new Date(weekStart);
+  next.setDate(weekStart.getDate() + delta * 7);
+  return next;
+}
+
 // "YYYY-MM-DD" 로컬 기준. ISO UTC 변환은 timezone 이슈가 있어 의도적으로 로컬 포맷.
 export function formatDateKey(date: Date): string {
   const y = date.getFullYear();

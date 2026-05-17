@@ -8,13 +8,3 @@
   gap: var(--space-6);
 }
 
-.header h1 {
-  font-size: var(--text-xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--space-1);
-}
-
-.header p {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}

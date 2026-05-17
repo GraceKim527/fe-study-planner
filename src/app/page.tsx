@@ -1,28 +1,55 @@
+import { redirect } from "next/navigation";
 import { PlannerView } from "@/components/planner/PlannerView";
+import { WeekNav } from "@/components/planner/WeekNav";
 import {
   formatDateKey,
-  formatWeekRange,
   getWeekStart,
+  parseDateKey,
   toDayOfWeek,
 } from "@/lib/time";
 import styles from "./page.module.css";
 
-export default function Home() {
+interface PageProps {
+  searchParams: Promise<{ weekStart?: string | string[] }>;
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const raw = (await searchParams).weekStart;
+  const rawStr = Array.isArray(raw) ? raw[0] : raw;
+
   const now = new Date();
   const today = toDayOfWeek(now);
-  const weekStartDate = getWeekStart(now);
-  const weekStart = formatDateKey(weekStartDate);
+  const thisWeek = formatDateKey(getWeekStart(now));
+
+  // 파라미터 없으면 이번 주로. 잘못된 날짜는 이번 주로 redirect (자가치유).
+  if (!rawStr) {
+    redirect(`/?weekStart=${thisWeek}`);
+  }
+  const parsed = parseDateKey(rawStr);
+  if (!parsed) {
+    redirect(`/?weekStart=${thisWeek}`);
+  }
+  // 월요일이 아니면 같은 주 월요일로 보정.
+  const normalized = formatDateKey(getWeekStart(parsed));
+  if (normalized !== rawStr) {
+    redirect(`/?weekStart=${normalized}`);
+  }
+
+  const weekStartDate = getWeekStart(parsed);
+  const weekStart = normalized;
+  const isThisWeek = weekStart === thisWeek;
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <h1>주간 학습 플래너</h1>
-        <p>{formatWeekRange(weekStartDate)}</p>
-      </header>
+      <WeekNav
+        weekStart={weekStart}
+        weekStartDate={weekStartDate}
+        isThisWeek={isThisWeek}
+      />
       <PlannerView
         weekStart={weekStart}
         weekStartDate={weekStartDate}
-        todayDayOfWeek={today}
+        todayDayOfWeek={isThisWeek ? today : null}
       />
     </div>
   );
