@@ -8,7 +8,7 @@ afterEach(cleanup);
 describe("SaveBar", () => {
   it("not dirty 상태에선 두 버튼 모두 비활성, '변경사항 없음' 표시", () => {
     render(
-      <SaveBar dirty={false} changeCount={0} isSaving={false} onSave={vi.fn()} onReset={vi.fn()} />,
+      <SaveBar dirty={false} changeCount={0} conflictCount={0} isSaving={false} onSave={vi.fn()} onReset={vi.fn()} />,
     );
     expect(screen.getByText("변경사항 없음")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "저장하기" })).toBeDisabled();
@@ -20,7 +20,7 @@ describe("SaveBar", () => {
     const onReset = vi.fn();
     const user = userEvent.setup();
     render(
-      <SaveBar dirty changeCount={3} isSaving={false} onSave={onSave} onReset={onReset} />,
+      <SaveBar dirty changeCount={3} conflictCount={0} isSaving={false} onSave={onSave} onReset={onReset} />,
     );
 
     expect(screen.getByText("변경사항 3개")).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe("SaveBar", () => {
 
   it("저장 중에는 라벨이 '저장 중...'으로 바뀌고 두 버튼 비활성, aria-busy", () => {
     render(
-      <SaveBar dirty changeCount={2} isSaving onSave={vi.fn()} onReset={vi.fn()} />,
+      <SaveBar dirty changeCount={2} conflictCount={0} isSaving onSave={vi.fn()} onReset={vi.fn()} />,
     );
     const saveBtn = screen.getByRole("button", { name: /저장 중/ });
     expect(saveBtn).toBeDisabled();
@@ -42,11 +42,45 @@ describe("SaveBar", () => {
     expect(screen.getByRole("button", { name: "되돌리기" })).toBeDisabled();
   });
 
+  it("conflictCount > 0이면 경고 메시지 + 저장 버튼 disabled (되돌리기는 활성)", () => {
+    render(
+      <SaveBar
+        dirty
+        changeCount={2}
+        conflictCount={2}
+        isSaving={false}
+        onSave={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent(/시간이 겹치는 블록 2개/);
+    expect(screen.getByRole("button", { name: "저장하기" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "되돌리기" })).toBeEnabled();
+  });
+
+  it("API 에러가 충돌 경고보다 우선 표시된다", () => {
+    render(
+      <SaveBar
+        dirty
+        changeCount={1}
+        conflictCount={1}
+        isSaving={false}
+        errorKind="NETWORK"
+        onSave={vi.fn()}
+        onReset={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/네트워크가 불안정/)).toBeInTheDocument();
+    expect(screen.queryByText(/시간이 겹치는 블록/)).not.toBeInTheDocument();
+  });
+
   it("TIME_CONFLICT 에러는 사용자 친화적 메시지로 보여주고 role=alert", () => {
     render(
       <SaveBar
         dirty
         changeCount={1}
+        conflictCount={0}
         isSaving={false}
         errorKind="TIME_CONFLICT"
         errorMessage="겹치는 학습 블록이 있습니다."
@@ -63,6 +97,7 @@ describe("SaveBar", () => {
       <SaveBar
         dirty
         changeCount={1}
+        conflictCount={0}
         isSaving={false}
         errorKind="NETWORK"
         onSave={vi.fn()}

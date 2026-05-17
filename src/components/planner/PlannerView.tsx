@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DayOfWeek, EditableStudyBlock, StudyBlock, TimeString } from "@/types";
 import { WeekGrid } from "./WeekGrid";
 import { WeekGridSkeleton } from "./WeekGridSkeleton";
@@ -14,6 +14,7 @@ import { usePlanner } from "@/hooks/usePlanner";
 import { useSavePlanner } from "@/hooks/useSavePlanner";
 import { countChanges, toSaveRequestBlocks, usePlannerStore } from "@/stores/plannerStore";
 import { ApiError } from "@/api/client";
+import { findConflictingIds } from "@/lib/conflict";
 import { minutesToTime, timeToMinutes } from "@/lib/time";
 
 type CreatePreset = { dayOfWeek: DayOfWeek; startTime: TimeString; endTime: TimeString };
@@ -40,6 +41,8 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
   const reset = usePlannerStore((s) => s.reset);
   const changeCount = usePlannerStore(countChanges);
   const dirty = changeCount > 0;
+  // 같은 충돌 계산을 WeekGrid도 자체적으로 수행한다(시각 표시용). selector 일원화는 과한 추상화라 유지.
+  const conflictCount = useMemo(() => findConflictingIds(blocks).size, [blocks]);
 
   const [editor, setEditor] = useState<EditorState>({ kind: "closed" });
   const [toastOpen, setToastOpen] = useState(false);
@@ -83,7 +86,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
   }
 
   function handleSave() {
-    if (!dirty) return;
+    if (!dirty || conflictCount > 0) return;
     save.save({ weekStart, blocks: toSaveRequestBlocks(blocks) });
   }
 
@@ -95,6 +98,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
       <SaveBar
         dirty={dirty}
         changeCount={changeCount}
+        conflictCount={conflictCount}
         isSaving={save.isPending}
         errorKind={saveError?.kind}
         errorMessage={save.error?.message}

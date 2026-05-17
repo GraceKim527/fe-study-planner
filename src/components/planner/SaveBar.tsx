@@ -6,6 +6,7 @@ import styles from "./SaveBar.module.css";
 interface Props {
   dirty: boolean;
   changeCount: number;
+  conflictCount: number;
   isSaving: boolean;
   errorKind?: ApiErrorKind;
   errorMessage?: string;
@@ -34,6 +35,7 @@ function describeError(kind?: ApiErrorKind, fallback?: string): string {
 export function SaveBar({
   dirty,
   changeCount,
+  conflictCount,
   isSaving,
   errorKind,
   errorMessage,
@@ -41,11 +43,14 @@ export function SaveBar({
   onReset,
 }: Props) {
   const showError = !!errorKind;
-  const disabled = !dirty || isSaving;
+  const hasConflict = conflictCount > 0;
+  // 충돌이 있으면 저장 차단(서버 라운드트립 절약). 에러 상태는 라벨만 다르고 버튼은 그대로 활성.
+  const disabled = !dirty || isSaving || hasConflict;
+  const showWarn = hasConflict && !showError;
 
   return (
     <div
-      className={`${styles.bar} ${dirty ? styles.barDirty : ""} ${showError ? styles.barError : ""}`}
+      className={`${styles.bar} ${dirty ? styles.barDirty : ""} ${(showError || hasConflict) ? styles.barError : ""}`}
       role="region"
       aria-label="저장 영역"
     >
@@ -53,6 +58,10 @@ export function SaveBar({
         {showError ? (
           <span className={styles.errorText} role="alert">
             {describeError(errorKind, errorMessage)}
+          </span>
+        ) : showWarn ? (
+          <span className={styles.errorText} role="alert">
+            시간이 겹치는 블록 {conflictCount}개가 있습니다. 충돌을 해결한 뒤 저장해 주세요.
           </span>
         ) : dirty ? (
           <span className={styles.dirtyText}>변경사항 {changeCount}개</span>
