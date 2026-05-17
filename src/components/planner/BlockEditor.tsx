@@ -61,8 +61,6 @@ export function BlockEditor({
   startHour = 8,
   endHour = 20,
 }: Props) {
-  const minTime = `${String(startHour).padStart(2, "0")}:00`;
-  const maxTime = `${String(endHour).padStart(2, "0")}:00`;
   const defaults = useMemo<FormState>(() => ({
     courseId: initial?.courseId ?? "",
     dayOfWeek: initial?.dayOfWeek ?? null,
@@ -80,16 +78,16 @@ export function BlockEditor({
 
   const courseId = useId();
   const dayId = useId();
-  const startId = useId();
-  const endId = useId();
+  const startGroupId = useId();
+  const endGroupId = useId();
   const memoId = useId();
   const memoCountId = useId();
   const timeErrId = useId();
   const courseErrId = useId();
   const dayErrId = useId();
 
-  const startTimeRef = useRef<HTMLInputElement>(null);
-  const dayRef = useRef<HTMLSelectElement>(null);
+  const startHourRef = useRef<HTMLSelectElement>(null);
+  const dayRef = useRef<HTMLButtonElement>(null);
   const courseInputRef = useRef<HTMLInputElement | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
@@ -99,7 +97,7 @@ export function BlockEditor({
       // 위에서부터 첫 에러 필드로 포커스.
       if (errors.courseId) courseInputRef.current?.focus();
       else if (errors.dayOfWeek) dayRef.current?.focus();
-      else if (errors.startTime || errors.endTime) startTimeRef.current?.focus();
+      else if (errors.startTime || errors.endTime) startHourRef.current?.focus();
       return;
     }
     onSubmit({
@@ -143,31 +141,33 @@ export function BlockEditor({
         </div>
 
         <div className={styles.field}>
-          <label htmlFor={dayId}>
+          <span id={dayId} className={styles.groupLabel}>
             요일<RequiredMark />
-          </label>
-          <select
-            id={dayId}
-            ref={dayRef}
-            className={styles.select}
-            required
-            value={form.dayOfWeek ?? ""}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                dayOfWeek: e.target.value === "" ? null : (Number(e.target.value) as DayOfWeek),
-              })
-            }
+          </span>
+          <div
+            className={styles.dayGroup}
+            role="radiogroup"
+            aria-labelledby={dayId}
             aria-invalid={showError("dayOfWeek") ? true : undefined}
             aria-describedby={showError("dayOfWeek") ? dayErrId : undefined}
           >
-            <option value="" disabled>
-              요일을 선택하세요
-            </option>
-            {DAY_OPTIONS.map((d) => (
-              <option key={d.value} value={d.value}>{d.label}</option>
-            ))}
-          </select>
+            {DAY_OPTIONS.map((d, idx) => {
+              const selected = form.dayOfWeek === d.value;
+              return (
+                <button
+                  key={d.value}
+                  ref={idx === 0 ? dayRef : undefined}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  className={`${styles.dayBtn} ${selected ? styles.dayBtnSelected : ""}`}
+                  onClick={() => setForm({ ...form, dayOfWeek: d.value })}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
           {showError("dayOfWeek") && (
             <p id={dayErrId} className={styles.error}>{errors.dayOfWeek}</p>
           )}
@@ -175,40 +175,34 @@ export function BlockEditor({
 
         <div className={styles.row}>
           <div className={styles.field}>
-            <label htmlFor={startId}>
+            <span id={startGroupId} className={styles.groupLabel}>
               시작<RequiredMark />
-            </label>
-            <input
-              id={startId}
-              ref={startTimeRef}
-              type="time"
-              step={1800}
-              min={minTime}
-              max={maxTime}
-              required
+            </span>
+            <TimePicker
+              role="start"
               value={form.startTime}
-              onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-              aria-invalid={showError("startTime") || showError("endTime") ? true : undefined}
-              aria-describedby={showError("startTime") || showError("endTime") ? timeErrId : undefined}
-              className={styles.timeInput}
+              onChange={(v) => setForm({ ...form, startTime: v })}
+              startHour={startHour}
+              endHour={endHour}
+              groupId={startGroupId}
+              invalid={showError("startTime") || showError("endTime") ? true : undefined}
+              describedBy={showError("startTime") || showError("endTime") ? timeErrId : undefined}
+              hourRef={startHourRef}
             />
           </div>
           <div className={styles.field}>
-            <label htmlFor={endId}>
+            <span id={endGroupId} className={styles.groupLabel}>
               종료<RequiredMark />
-            </label>
-            <input
-              id={endId}
-              type="time"
-              step={1800}
-              min={minTime}
-              max={maxTime}
-              required
+            </span>
+            <TimePicker
+              role="end"
               value={form.endTime}
-              onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-              aria-invalid={showError("endTime") ? true : undefined}
-              aria-describedby={showError("endTime") ? timeErrId : undefined}
-              className={styles.timeInput}
+              onChange={(v) => setForm({ ...form, endTime: v })}
+              startHour={startHour}
+              endHour={endHour}
+              groupId={endGroupId}
+              invalid={showError("endTime") ? true : undefined}
+              describedBy={showError("endTime") ? timeErrId : undefined}
             />
           </div>
         </div>
@@ -256,6 +250,106 @@ export function BlockEditor({
         </div>
       </form>
     </Modal>
+  );
+}
+
+// 30분 단위 + startHour~endHour 범위를 강제하는 시간 선택기.
+// HH select × MM select 두 개. 값 표현은 부모 form과 같은 "HH:MM" 문자열.
+// 종료(role="end") + HH=endHour 조합에선 MM 30이 disabled (그리드 범위 초과).
+interface TimePickerProps {
+  role: "start" | "end";
+  value: TimeString;
+  onChange(next: TimeString): void;
+  startHour: number;
+  endHour: number;
+  groupId: string;
+  invalid?: boolean;
+  describedBy?: string;
+  hourRef?: React.RefObject<HTMLSelectElement | null>;
+}
+
+function TimePicker({
+  role,
+  value,
+  onChange,
+  startHour,
+  endHour,
+  groupId,
+  invalid,
+  describedBy,
+  hourRef,
+}: TimePickerProps) {
+  const [hh, mm] = value ? value.split(":") : ["", ""];
+  // 시작은 endHour 미포함(시작=20:00은 길이 0), 종료는 endHour 포함.
+  const hourMax = role === "end" ? endHour : endHour - 1;
+  const hourOptions: number[] = [];
+  for (let h = startHour; h <= hourMax; h++) hourOptions.push(h);
+  const disableHalf = role === "end" && Number(hh) === endHour;
+
+  function setHour(next: string) {
+    if (next === "") {
+      onChange("");
+      return;
+    }
+    // HH만 정해진 단계에선 MM이 비어있을 수 있다. 기본 00으로 채워 유효한 HH:MM 유지.
+    const nextMm = mm === "" || (next === String(endHour).padStart(2, "0") && mm === "30") ? "00" : mm;
+    onChange(`${next}:${nextMm}`);
+  }
+
+  function setMinute(next: string) {
+    if (hh === "") {
+      // HH 없이 MM만 선택되는 경우는 없도록 막는다(브라우저상 HH 먼저 고름).
+      return;
+    }
+    onChange(`${hh}:${next}`);
+  }
+
+  return (
+    <div className={styles.timeGroup} role="group" aria-labelledby={groupId}>
+      <select
+        ref={hourRef}
+        className={`${styles.select} ${styles.timeSelect}`}
+        value={hh}
+        onChange={(e) => setHour(e.target.value)}
+        aria-label={role === "start" ? "시작 시" : "종료 시"}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        required
+      >
+        <option value="" disabled>
+          시
+        </option>
+        {hourOptions.map((h) => {
+          const v = String(h).padStart(2, "0");
+          return (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          );
+        })}
+      </select>
+      <span className={styles.timeSep} aria-hidden>
+        :
+      </span>
+      <select
+        className={`${styles.select} ${styles.timeSelect}`}
+        value={mm}
+        onChange={(e) => setMinute(e.target.value)}
+        aria-label={role === "start" ? "시작 분" : "종료 분"}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        disabled={hh === ""}
+        required
+      >
+        <option value="" disabled>
+          분
+        </option>
+        <option value="00">00</option>
+        <option value="30" disabled={disableHalf}>
+          30
+        </option>
+      </select>
+    </div>
   );
 }
 

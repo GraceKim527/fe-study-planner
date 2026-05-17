@@ -32,9 +32,14 @@ describe("BlockEditor (create)", () => {
       <BlockEditor open mode="create" courses={COURSES} onSubmit={vi.fn()} onClose={vi.fn()} />,
     );
     expect(screen.getByLabelText(/강의/)).toHaveValue("");
-    expect(screen.getByLabelText(/요일/)).toHaveValue("");
-    expect(screen.getByLabelText(/시작/)).toHaveValue("");
-    expect(screen.getByLabelText(/종료/)).toHaveValue("");
+    // 요일은 7개 radio 버튼, 초기엔 어느 것도 선택되지 않음.
+    const dayBtns = screen.getAllByRole("radio");
+    expect(dayBtns).toHaveLength(7);
+    expect(dayBtns.every((b) => b.getAttribute("aria-checked") === "false")).toBe(true);
+    expect(screen.getByRole("combobox", { name: "시작 시" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "시작 분" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "종료 시" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "종료 분" })).toHaveValue("");
   });
 
   it("필수값 미입력 상태에서 추가 누르면 onSubmit 차단 + 에러 표시", async () => {
@@ -55,10 +60,11 @@ describe("BlockEditor (create)", () => {
     );
     await userEvent.click(screen.getByLabelText(/강의/));
     await userEvent.click(screen.getByRole("option", { name: "영어" }));
-    await userEvent.selectOptions(screen.getByLabelText(/요일/), "2");
-    // jsdom은 input[type=time] value를 직접 set으로 채워준다.
-    await userEvent.type(screen.getByLabelText(/시작/), "09:00");
-    await userEvent.type(screen.getByLabelText(/종료/), "10:30");
+    await userEvent.click(screen.getByRole("radio", { name: "수" }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "시작 시" }), "09");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "시작 분" }), "00");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "종료 시" }), "10");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "종료 분" }), "30");
     await userEvent.click(screen.getByRole("button", { name: "추가" }));
     expect(onSubmit).toHaveBeenCalledWith({
       courseId: "c2",
@@ -76,14 +82,29 @@ describe("BlockEditor (create)", () => {
     );
     await userEvent.click(screen.getByLabelText(/강의/));
     await userEvent.click(screen.getByRole("option", { name: "수학" }));
-    await userEvent.selectOptions(screen.getByLabelText(/요일/), "0");
-    await userEvent.type(screen.getByLabelText(/시작/), "10:00");
-    await userEvent.type(screen.getByLabelText(/종료/), "10:00");
+    await userEvent.click(screen.getByRole("radio", { name: "월" }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "시작 시" }), "10");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "시작 분" }), "00");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "종료 시" }), "10");
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "종료 분" }), "00");
     await userEvent.click(screen.getByRole("button", { name: "추가" }));
     expect(onSubmit).not.toHaveBeenCalled();
     expect(
       screen.getByText("종료 시간은 시작 시간보다 늦어야 합니다."),
     ).toBeInTheDocument();
+  });
+
+  it("종료 시가 20일 땐 30분 옵션은 disabled (그리드 범위 초과)", async () => {
+    render(
+      <BlockEditor open mode="create" courses={COURSES} onSubmit={vi.fn()} onClose={vi.fn()} />,
+    );
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: "종료 시" }), "20");
+    const endMin = screen.getByRole("combobox", { name: "종료 분" });
+    const halfOption = Array.from(endMin.querySelectorAll("option")).find(
+      (o) => o.value === "30",
+    );
+    expect(halfOption).toBeDefined();
+    expect(halfOption?.disabled).toBe(true);
   });
 
   it("취소 클릭 시 onClose 호출", async () => {
@@ -128,9 +149,12 @@ describe("BlockEditor (edit)", () => {
       />,
     );
     expect(screen.getByLabelText(/강의/)).toHaveValue("영어");
-    expect(screen.getByLabelText(/요일/)).toHaveValue("3");
-    expect(screen.getByLabelText(/시작/)).toHaveValue("13:00");
-    expect(screen.getByLabelText(/종료/)).toHaveValue("14:30");
+    // dayOfWeek=3 → 목요일.
+    expect(screen.getByRole("radio", { name: "목" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("combobox", { name: "시작 시" })).toHaveValue("13");
+    expect(screen.getByRole("combobox", { name: "시작 분" })).toHaveValue("00");
+    expect(screen.getByRole("combobox", { name: "종료 시" })).toHaveValue("14");
+    expect(screen.getByRole("combobox", { name: "종료 분" })).toHaveValue("30");
     expect(screen.getByRole("button", { name: "삭제" })).toBeInTheDocument();
   });
 
