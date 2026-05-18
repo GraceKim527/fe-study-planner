@@ -176,6 +176,11 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
           mode={editor.kind === "edit" ? "edit" : "create"}
           initial={editor.kind === "edit" ? editor.block : (editor.preset ?? undefined)}
           courses={courses.data?.courses ?? []}
+          otherBlocks={
+            editor.kind === "edit"
+              ? blocks.filter((b) => b.id !== editor.block.id)
+              : blocks
+          }
           onSubmit={handleSubmit}
           onDelete={editor.kind === "edit" ? handleDelete : undefined}
           onClose={() => setEditor({ kind: "closed" })}

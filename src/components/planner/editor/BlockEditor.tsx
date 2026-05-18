@@ -1,8 +1,9 @@
 "use client";
 
 import { useId, useMemo, useRef, useState } from "react";
-import type { Course, DayOfWeek, EditableStudyBlock, TimeString } from "@/types";
+import type { Course, DayOfWeek, EditableStudyBlock, StudyBlock, TimeString } from "@/types";
 import { timeToMinutes } from "@/lib/time";
+import { hasConflict } from "@/lib/conflict";
 import { Modal } from "@/components/ui/Modal";
 import { Combobox } from "@/components/ui/Combobox";
 import { TimePicker } from "./TimePicker";
@@ -31,6 +32,8 @@ interface Props {
   // 편집 모드: 기존 블록. 추가 모드: 부분 기본값(빈 슬롯 클릭 시 day/startTime 채워서 넘김)도 받을 수 있다.
   initial?: EditableStudyBlock | Partial<BlockDraft>;
   courses: Course[];
+  // 충돌 검사 대상. 편집 모드에선 자기 자신을 제외하고 넘긴다.
+  otherBlocks?: StudyBlock[];
   onSubmit(draft: BlockDraft): void;
   onDelete?(): void;
   onClose(): void;
@@ -56,6 +59,7 @@ export function BlockEditor({
   mode,
   initial,
   courses,
+  otherBlocks = [],
   onSubmit,
   onDelete,
   onClose,
@@ -73,9 +77,23 @@ export function BlockEditor({
   // 폼 상태는 한 번만 초기화. 다시 열거나 다른 블록을 편집하려면 부모가 key를 갈아끼워 리마운트해야 한다.
   const [form, setForm] = useState<FormState>(defaults);
   const [submitted, setSubmitted] = useState(false);
+  // 폼-레벨 에러(시간 충돌). submit 시 채워지고, 시간·요일이 바뀌면 무효화한다.
+  const [conflictError, setConflictError] = useState<string | null>(null);
 
   const errors = validateForm(form, { startHour, endHour });
   const hasError = Object.keys(errors).length > 0;
+
+  function updateForm(patch: Partial<FormState>) {
+    // 시간/요일이 바뀌면 직전 충돌 메시지는 더 이상 유효하지 않다.
+    if (
+      patch.startTime !== undefined ||
+      patch.endTime !== undefined ||
+      patch.dayOfWeek !== undefined
+    ) {
+      setConflictError(null);
+    }
+    setForm({ ...form, ...patch });
+  }
 
   const courseId = useId();
   const dayId = useId();
@@ -100,6 +118,26 @@ export function BlockEditor({
       else if (errors.startTime || errors.endTime) startHourRef.current?.focus();
       return;
     }
+
+    const draftAsBlock: StudyBlock = {
+      id: "__draft__",
+      courseId: form.courseId,
+      dayOfWeek: form.dayOfWeek as DayOfWeek,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      memo: form.memo.trim() || undefined,
+    };
+    const collided = otherBlocks.find((b) => hasConflict(draftAsBlock, b));
+    if (collided) {
+      const course = courses.find((c) => c.id === collided.courseId);
+      const title = course?.title ?? "다른 학습 블록";
+      setConflictError(
+        `이미 등록된 "${title}" (${collided.startTime}~${collided.endTime})과 시간이 겹칩니다.`,
+      );
+      startHourRef.current?.focus();
+      return;
+    }
+
     onSubmit({
       courseId: form.courseId,
       dayOfWeek: form.dayOfWeek as DayOfWeek,
@@ -128,7 +166,7 @@ export function BlockEditor({
             id={courseId}
             value={form.courseId}
             options={courses.map((c) => ({ value: c.id, label: c.title }))}
-            onChange={(v) => setForm({ ...form, courseId: v })}
+            onChange={(v) => updateForm({ courseId: v })}
             placeholder="강의를 검색하거나 선택하세요"
             required
             ariaInvalid={showError("courseId") ? true : undefined}
@@ -161,7 +199,7 @@ export function BlockEditor({
                   role="radio"
                   aria-checked={selected}
                   className={`${styles.dayBtn} ${selected ? styles.dayBtnSelected : ""}`}
-                  onClick={() => setForm({ ...form, dayOfWeek: d.value })}
+                  onClick={() => updateForm({ dayOfWeek: d.value })}
                 >
                   {d.label}
                 </button>
@@ -181,7 +219,7 @@ export function BlockEditor({
             <TimePicker
               role="start"
               value={form.startTime}
-              onChange={(v) => setForm({ ...form, startTime: v })}
+              onChange={(v) => updateForm({ startTime: v })}
               startHour={startHour}
               endHour={endHour}
               groupId={startGroupId}
@@ -197,7 +235,7 @@ export function BlockEditor({
             <TimePicker
               role="end"
               value={form.endTime}
-              onChange={(v) => setForm({ ...form, endTime: v })}
+              onChange={(v) => updateForm({ endTime: v })}
               startHour={startHour}
               endHour={endHour}
               groupId={endGroupId}
@@ -222,13 +260,19 @@ export function BlockEditor({
           <textarea
             id={memoId}
             value={form.memo}
-            onChange={(e) => setForm({ ...form, memo: e.target.value })}
+            onChange={(e) => updateForm({ memo: e.target.value })}
             rows={3}
             maxLength={MEMO_MAX}
             placeholder={`최대 ${MEMO_MAX}자까지 입력 가능합니다`}
             aria-describedby={memoCountId}
           />
         </div>
+
+        {conflictError && (
+          <p className={styles.formError} role="alert">
+            {conflictError}
+          </p>
+        )}
 
         <div className={styles.actions}>
           {mode === "edit" && onDelete && (
