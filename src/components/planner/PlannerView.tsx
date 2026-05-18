@@ -83,6 +83,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
 
   function handleDelete() {
     if (editor.kind !== "edit") return;
+    if (!window.confirm("이 블록을 삭제하시겠습니까?")) return;
     removeBlock(editor.block.id);
     setEditor({ kind: "closed" });
   }
@@ -111,7 +112,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
 
       {ready ? (
         <WeeklySummary blocks={blocks} courses={courses.data.courses} />
-      ) : (
+      ) : hasError ? null : (
         <WeeklySummarySkeleton />
       )}
 

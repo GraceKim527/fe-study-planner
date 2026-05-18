@@ -1,22 +1,27 @@
 import type { StudyBlock } from "@/types";
+import { formatDateKey, getWeekStart } from "@/lib/time";
 import { initialBlocks } from "./data";
 
 // weekStart(YYYY-MM-DD) → 블록 배열. 메모리 보관, 새로고침 시 초기화.
 const store = new Map<string, StudyBlock[]>();
 
-// 초기 시드는 "현재 주"가 아니라 빈 키로 두지 않고, 첫 GET 시점에 weekStart로 시드한다.
-// 이러면 어떤 주를 처음 열어도 데모 블록이 보임 — 채점관 첫 인상 관점.
+// 데모 시드는 "이번 주"에만. 지난주/다음주는 빈 상태로 시작해
+// 주간 이동이 실제로 의미 있게 보이도록 한다.
+const thisWeekKey = formatDateKey(getWeekStart(new Date()));
 let seeded = false;
 
+function ensureSeed() {
+  if (seeded) return;
+  store.set(thisWeekKey, [...initialBlocks]);
+  seeded = true;
+}
+
 export function getBlocks(weekStart: string): StudyBlock[] {
-  if (!seeded) {
-    store.set(weekStart, [...initialBlocks]);
-    seeded = true;
-  }
+  ensureSeed();
   return store.get(weekStart) ?? [];
 }
 
 export function setBlocks(weekStart: string, blocks: StudyBlock[]): void {
+  ensureSeed();
   store.set(weekStart, blocks);
-  seeded = true;
 }
