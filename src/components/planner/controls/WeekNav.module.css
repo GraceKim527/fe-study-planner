@@ -4,18 +4,13 @@
   gap: var(--space-2);
 }
 
-.titleRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
 .title {
   font-size: var(--text-xl);
   font-weight: var(--font-weight-bold);
 }
 
 .todayBtn {
+  margin-left: var(--space-2);
   font-size: var(--text-xs);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
@@ -23,13 +18,23 @@
   background: var(--color-bg);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
-.todayBtn:hover {
+.todayBtn:hover:not(:disabled) {
   background: var(--color-primary-50);
   color: var(--color-primary-700);
   border-color: var(--color-primary-200);
+}
+
+.todayBtn:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.todayBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .navRow {

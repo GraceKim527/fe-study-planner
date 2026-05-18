@@ -29,14 +29,7 @@ export function WeekNav({ weekStart, weekStartDate, isThisWeek }: Props) {
 
   return (
     <header className={styles.header}>
-      <div className={styles.titleRow}>
-        <h1 className={styles.title}>주간 학습 플래너</h1>
-        {!isThisWeek && (
-          <button type="button" className={styles.todayBtn} onClick={() => go(today)}>
-            오늘로
-          </button>
-        )}
-      </div>
+      <h1 className={styles.title}>주간 학습 플래너</h1>
       <div className={styles.navRow}>
         <button
           type="button"
@@ -56,6 +49,15 @@ export function WeekNav({ weekStart, weekStartDate, isThisWeek }: Props) {
           aria-label="다음 주"
         >
           ›
+        </button>
+        <button
+          type="button"
+          className={styles.todayBtn}
+          onClick={() => go(today)}
+          disabled={isThisWeek}
+          aria-label="오늘로"
+        >
+          오늘
         </button>
       </div>
     </header>

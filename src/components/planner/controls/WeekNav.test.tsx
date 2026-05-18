@@ -31,14 +31,14 @@ describe("WeekNav", () => {
     expect(push).toHaveBeenCalledWith("/?weekStart=2026-05-18");
   });
 
-  it("isThisWeek=true면 '오늘로' 버튼이 숨겨진다", () => {
+  it("isThisWeek=true면 '오늘' 버튼이 비활성화된다", () => {
     render(<WeekNav weekStart={weekStart} weekStartDate={weekStartDate} isThisWeek />);
-    expect(screen.queryByRole("button", { name: "오늘로" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "오늘로" })).toBeDisabled();
   });
 
-  it("isThisWeek=false면 '오늘로' 버튼이 표시된다", () => {
+  it("isThisWeek=false면 '오늘' 버튼이 활성화된다", () => {
     render(<WeekNav weekStart={weekStart} weekStartDate={weekStartDate} isThisWeek={false} />);
-    expect(screen.getByRole("button", { name: "오늘로" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "오늘로" })).toBeEnabled();
   });
 
   it("dirty 상태에서 이동 시 confirm을 띄우고 거절 시 push 안 됨", async () => {

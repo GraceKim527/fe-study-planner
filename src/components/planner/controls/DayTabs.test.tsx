@@ -42,4 +42,46 @@ describe("DayTabs", () => {
     expect(tabs[3].className).toMatch(/today/i);
     expect(tabs[0].className).toMatch(/selected/i);
   });
+
+  it("selected 탭만 tabIndex=0, 나머지는 -1 (roving tabindex)", () => {
+    render(<DayTabs selected={2} dayDates={dayDates} onChange={() => {}} />);
+    const tabs = screen.getAllByRole("tab");
+    tabs.forEach((tab, i) => {
+      expect(tab).toHaveAttribute("tabindex", i === 2 ? "0" : "-1");
+    });
+  });
+
+  it("ArrowRight는 다음 요일로 onChange", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<DayTabs selected={2} dayDates={dayDates} onChange={onChange} />);
+    screen.getAllByRole("tab")[2].focus();
+
+    await user.keyboard("{ArrowRight}");
+    expect(onChange).toHaveBeenLastCalledWith(3);
+  });
+
+  it("ArrowLeft는 이전 요일로 onChange (월에서 누르면 일로 순환)", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<DayTabs selected={0} dayDates={dayDates} onChange={onChange} />);
+    screen.getAllByRole("tab")[0].focus();
+
+    await user.keyboard("{ArrowLeft}");
+    expect(onChange).toHaveBeenLastCalledWith(6);
+  });
+
+  it("Home/End로 첫·마지막 요일 이동", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<DayTabs selected={3} dayDates={dayDates} onChange={onChange} />);
+    const tabs = screen.getAllByRole("tab");
+    tabs[3].focus();
+
+    await user.keyboard("{End}");
+    expect(onChange).toHaveBeenLastCalledWith(6);
+
+    await user.keyboard("{Home}");
+    expect(onChange).toHaveBeenLastCalledWith(0);
+  });
 });
