@@ -80,7 +80,7 @@ export function BlockEditor({
   // 폼-레벨 에러(시간 충돌). submit 시 채워지고, 시간·요일이 바뀌면 무효화한다.
   const [conflictError, setConflictError] = useState<string | null>(null);
 
-  const errors = validateForm(form, { startHour, endHour });
+  const errors = validateFormState(form, { startHour, endHour });
   const hasError = Object.keys(errors).length > 0;
 
   function updateForm(patch: Partial<FormState>) {
@@ -308,7 +308,7 @@ function RequiredMark() {
 }
 
 // 모달 안에서는 폼 자체 유효성만 본다. 충돌 검사는 저장 단계에서.
-function validateForm(form: FormState, range: { startHour: number; endHour: number } = { startHour: 8, endHour: 20 }) {
+function validateFormState(form: FormState, range: { startHour: number; endHour: number } = { startHour: 8, endHour: 20 }) {
   const errors: Partial<Record<keyof FormState, string>> = {};
   if (!form.courseId) errors.courseId = "강의를 선택해주세요.";
   if (form.dayOfWeek === null) errors.dayOfWeek = "요일을 선택해주세요.";
@@ -338,8 +338,8 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function validate(draft: BlockDraft, range?: { startHour: number; endHour: number }) {
-  return validateForm({
+export function validateBlockDraft(draft: BlockDraft, range?: { startHour: number; endHour: number }) {
+  return validateFormState({
     courseId: draft.courseId,
     dayOfWeek: draft.dayOfWeek,
     startTime: draft.startTime,

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BlockEditor, validate } from "./BlockEditor";
+import { BlockEditor, validateBlockDraft } from "./BlockEditor";
 import type { Course, EditableStudyBlock } from "@/types";
 
 afterEach(cleanup);
@@ -11,17 +11,17 @@ const COURSES: Course[] = [
   { id: "c2", title: "영어", color: "#3B82F6" },
 ];
 
-describe("validate", () => {
+describe("validateBlockDraft", () => {
   it("강의 미선택은 에러", () => {
-    const e = validate({ courseId: "", dayOfWeek: 0, startTime: "09:00", endTime: "10:00" });
+    const e = validateBlockDraft({ courseId: "", dayOfWeek: 0, startTime: "09:00", endTime: "10:00" });
     expect(e.courseId).toBeDefined();
   });
   it("종료 ≤ 시작은 에러", () => {
-    const e = validate({ courseId: "c1", dayOfWeek: 0, startTime: "10:00", endTime: "10:00" });
+    const e = validateBlockDraft({ courseId: "c1", dayOfWeek: 0, startTime: "10:00", endTime: "10:00" });
     expect(e.endTime).toBeDefined();
   });
   it("정상 입력은 에러 없음", () => {
-    const e = validate({ courseId: "c1", dayOfWeek: 0, startTime: "09:00", endTime: "10:00" });
+    const e = validateBlockDraft({ courseId: "c1", dayOfWeek: 0, startTime: "09:00", endTime: "10:00" });
     expect(e).toEqual({});
   });
 });

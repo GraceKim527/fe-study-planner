@@ -20,6 +20,11 @@ import { ApiError } from "@/api/client";
 import { findConflictingIds } from "@/lib/conflict";
 import { minutesToTime, timeToMinutes } from "@/lib/time";
 
+// 모바일 일별 뷰로 전환되는 브레이크포인트. WeekGrid.module.css의 @media와 동기화 필요.
+const MOBILE_BREAKPOINT_PX = 640;
+// 빈 슬롯 클릭 시 새 블록 기본 길이.
+const DEFAULT_BLOCK_MINUTES = 60;
+
 type CreatePreset = { dayOfWeek: DayOfWeek; startTime: TimeString; endTime: TimeString };
 
 interface Props {
@@ -102,7 +107,45 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
   // 모바일 일별 뷰에서 selectedDay 외 컬럼/헤더를 숨기는 CSS.
   // PlannerView 마커(data-planner-root) 안쪽으로 범위 제한.
   // SSR에서도 selectedDay 기본값을 알기 때문에 첫 페인트부터 정확 — 깜빡임 0.
-  const mobileDayCss = `@media (max-width: 640px) { [data-planner-root] [data-day]:not([data-day="${selectedDay}"]) { display: none !important; } }`;
+  const mobileDayCss = `@media (max-width: ${MOBILE_BREAKPOINT_PX}px) { [data-planner-root] [data-day]:not([data-day="${selectedDay}"]) { display: none !important; } }`;
+
+  function renderSummary() {
+    if (ready) {
+      return <WeeklySummary blocks={blocks} courses={courses.data.courses} />;
+    }
+    if (hasError) return null;
+    return <WeeklySummarySkeleton />;
+  }
+
+  function renderGrid() {
+    if (hasError) {
+      return (
+        <PlannerError
+          message={courses.error?.message ?? planner.error?.message}
+          onRetry={() => {
+            if (courses.isError) courses.refetch();
+            if (planner.isError) planner.refetch();
+          }}
+        />
+      );
+    }
+    if (!ready) return <WeekGridSkeleton />;
+    return (
+      <WeekGrid
+        blocks={blocks}
+        courses={courses.data.courses}
+        weekStart={weekStartDate}
+        todayDayOfWeek={todayDayOfWeek}
+        showEmptyHint={blocks.length === 0}
+        onBlockClick={(b: StudyBlock) => setEditor({ kind: "edit", block: b as EditableStudyBlock })}
+        onSlotClick={(dayOfWeek, startTime) => {
+          // 그리드 끝을 넘는 경우는 WeekGrid에서 이미 거름.
+          const endTime = minutesToTime(timeToMinutes(startTime) + DEFAULT_BLOCK_MINUTES);
+          setEditor({ kind: "create", preset: { dayOfWeek, startTime, endTime } });
+        }}
+      />
+    );
+  }
 
   return (
     // display:contents — 부모(.page)의 flex/gap을 자식들이 그대로 받게 한다.
@@ -110,11 +153,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
     <div data-planner-root style={{ display: "contents" }}>
       <style>{mobileDayCss}</style>
 
-      {ready ? (
-        <WeeklySummary blocks={blocks} courses={courses.data.courses} />
-      ) : hasError ? null : (
-        <WeeklySummarySkeleton />
-      )}
+      {renderSummary()}
 
       {ready && (
         <DayTabs
@@ -137,31 +176,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
         />
       )}
 
-      {hasError ? (
-        <PlannerError
-          message={courses.error?.message ?? planner.error?.message}
-          onRetry={() => {
-            if (courses.isError) courses.refetch();
-            if (planner.isError) planner.refetch();
-          }}
-        />
-      ) : ready ? (
-        <WeekGrid
-          blocks={blocks}
-          courses={courses.data.courses}
-          weekStart={weekStartDate}
-          todayDayOfWeek={todayDayOfWeek}
-          showEmptyHint={blocks.length === 0}
-          onBlockClick={(b: StudyBlock) => setEditor({ kind: "edit", block: b as EditableStudyBlock })}
-          onSlotClick={(dayOfWeek, startTime) => {
-            // 기본 길이 1시간. 그리드 끝을 넘는 경우는 WeekGrid에서 이미 거름.
-            const endTime = minutesToTime(timeToMinutes(startTime) + 60);
-            setEditor({ kind: "create", preset: { dayOfWeek, startTime, endTime } });
-          }}
-        />
-      ) : (
-        <WeekGridSkeleton />
-      )}
+      {renderGrid()}
 
       <Toast
         open={toastOpen}
