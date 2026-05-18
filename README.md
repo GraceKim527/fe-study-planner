@@ -2,6 +2,10 @@
 
 채용 과제 FE-B. 주간 학습 스케줄을 시각적으로 편집·저장하는 플래너입니다.
 
+![Lighthouse: Performance 100 / Accessibility 92 / Best Practices 96 / SEO 100](./public/lighthouse.png)
+
+Lighthouse 측정 (`/?weekStart=YYYY-MM-DD` 페이지, 데스크톱 기준).
+
 ---
 
 ## 목차
