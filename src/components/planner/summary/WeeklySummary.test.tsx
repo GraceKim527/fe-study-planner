@@ -14,7 +14,7 @@ const COURSES: Course[] = [
 describe("WeeklySummary", () => {
   it("블록이 없으면 빈 상태 메시지를 보여주고 차트 영역은 그리지 않는다", () => {
     render(<WeeklySummary blocks={[]} courses={COURSES} />);
-    expect(screen.getByText(/학습 블록을 추가하면/)).toBeInTheDocument();
+    expect(screen.getByText(/아직 이번 주 학습 계획이 없어요/)).toBeInTheDocument();
     expect(screen.queryByText("강의별")).not.toBeInTheDocument();
     expect(screen.getByText("0분")).toBeInTheDocument();
   });

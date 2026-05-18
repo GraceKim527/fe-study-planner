@@ -151,6 +151,7 @@ export function PlannerView({ weekStart, weekStartDate, todayDayOfWeek }: Props)
           courses={courses.data.courses}
           weekStart={weekStartDate}
           todayDayOfWeek={todayDayOfWeek}
+          showEmptyHint={blocks.length === 0}
           onBlockClick={(b: StudyBlock) => setEditor({ kind: "edit", block: b as EditableStudyBlock })}
           onSlotClick={(dayOfWeek, startTime) => {
             // 기본 길이 1시간. 그리드 끝을 넘는 경우는 WeekGrid에서 이미 거름.

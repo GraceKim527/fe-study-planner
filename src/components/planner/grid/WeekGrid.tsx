@@ -19,6 +19,8 @@ interface Props {
   todayDayOfWeek?: DayOfWeek | null;
   onBlockClick?: (block: StudyBlock) => void;
   onSlotClick?: (day: DayOfWeek, startTime: TimeString) => void;
+  // 빈 상태 안내 노출 여부. 부모가 의미를 가지므로 prop으로.
+  showEmptyHint?: boolean;
 }
 
 const SLOT_MINUTES = 30;
@@ -34,6 +36,7 @@ export function WeekGrid({
   todayDayOfWeek = null,
   onBlockClick,
   onSlotClick,
+  showEmptyHint = false,
 }: Props) {
   const dayDates = useMemo(
     () =>
@@ -140,6 +143,11 @@ export function WeekGrid({
 
   return (
     <div className={styles.wrapper}>
+      {showEmptyHint && onSlotClick && (
+        <p className={styles.emptyHint}>
+          원하는 시간대를 클릭해 학습 블록을 추가하세요.
+        </p>
+      )}
       <div className={styles.header}>
         <div className={styles.headerSpacer} aria-hidden />
         {DAY_LABELS.map((label, i) => (
@@ -207,7 +215,9 @@ export function WeekGrid({
                   className={styles.slotPreview}
                   style={{ top: preview.topPx, height: preview.heightPx }}
                   aria-hidden
-                />
+                >
+                  <span className={styles.slotPreviewLabel}>+ 클릭하여 추가</span>
+                </div>
               )}
               <div className={styles.blockLayer}>
                 {dayBlocks.map((block) => {

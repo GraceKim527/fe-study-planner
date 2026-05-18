@@ -115,6 +115,18 @@
   pointer-events: none;
 }
 
+/* 빈 상태 inline 힌트 — 그리드 상단에 한 줄로. blocks=0일 때만. */
+.emptyHint {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-primary-200);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 /* 빈 슬롯 hover preview — 클릭하면 여기 생긴다는 시각 힌트. */
 .slotPreview {
   position: absolute;
@@ -128,6 +140,15 @@
   opacity: 0.7;
   pointer-events: none;
   z-index: var(--z-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slotPreviewLabel {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-700);
 }
 
 /* 터치 환경에선 hover 개념이 없음. */

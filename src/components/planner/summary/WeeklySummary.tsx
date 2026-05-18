@@ -40,7 +40,9 @@ export function WeeklySummary({ blocks, courses }: Props) {
 
       {isEmpty ? (
         <div className={styles.emptyCard}>
-          <p className={styles.empty}>학습 블록을 추가하면 요약이 여기에 표시됩니다.</p>
+          <p className={styles.empty}>
+            아직 이번 주 학습 계획이 없어요. 아래 그리드에서 시간을 선택해 첫 블록을 추가해보세요.
+          </p>
         </div>
       ) : (
         <div className={styles.charts}>
