@@ -1,20 +1,30 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-// 본 과제는 백엔드가 없어 dev에서 항상 MSW를 켠다.
-// children은 즉시 렌더 — 헤더/스켈레톤이 사라졌다 나타나는 깜빡임 방지.
-// worker 시작 전 잠깐 발생하는 fetch는 query의 retry로 흡수된다.
-const ENABLE_MSW = process.env.NODE_ENV === "development";
+// 본 과제는 백엔드가 없어 production 빌드에서도 MSW로 mock한다.
+// worker가 준비된 뒤에 children을 렌더해야 첫 fetch가 404로 떨어지지 않는다.
 
 export function MswProvider({ children }: { children: React.ReactNode }) {
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    if (!ENABLE_MSW) return;
     (async () => {
-      const { worker } = await import("./browser");
-      await worker.start({ onUnhandledRequest: "bypass" });
+      try {
+        const { worker } = await import("./browser");
+        await worker.start({
+          onUnhandledRequest: "bypass",
+          serviceWorker: { url: "/mockServiceWorker.js" },
+        });
+      } catch (e) {
+        console.error("[MswProvider] worker failed to start", e);
+      } finally {
+        // worker 실패해도 빈 화면에 갇히지 않도록 finally에서 setReady
+        setReady(true);
+      }
     })();
   }, []);
 
+  if (!ready) return null;
   return <>{children}</>;
 }
